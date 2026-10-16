@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Open Space Tycoon</title>
+<script>
+/* === Configuration Supabase ===
+   Colle ici l'URL du projet et la clé publique "anon" (Project Settings > API).
+   La clé anon est faite pour être publique : la sécurité repose sur les règles RLS de supabase.sql.
+   Laisse vide pour jouer en local uniquement. */
+window.OST_CONFIG = {
+  url: "",      // ex. "https://abcdefgh.supabase.co"
+  anonKey: ""   // ex. "eyJhbGciOi..."
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: a graph-paper notebook page. Post-it counter and red stamp on the left, tabbed ledger on the right. Deliberately single light theme. */
+:root{
+  color-scheme: light;
+  --paper:#fbfcfa; --grid:#dfe8ee; --ink:#1d2b4f; --ink-soft:#5a6787;
+  --postit:#ffe066; --postit-edge:#f2c94c; --pink:#ffc2d4; --pen:#2348c9; --red:#d13a3a; --ok:#2e8b57;
+  --display:"Kalam", "Comic Sans MS", cursive;
+  --body:"Work Sans", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, monospace;
+}
+html,body{height:100%}
+body{background:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:22px 22px;color:var(--ink);font-family:var(--body);font-size:15px}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr);gap:28px}
+@media (max-width:820px){.wrap{grid-template-columns:1fr}}
+header{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px}
+h1{font-family:var(--display);font-size:2.4rem;margin:0;line-height:1;text-wrap:balance;color:var(--pen)}
+h1 small{font-size:1rem;color:var(--ink-soft);font-family:var(--body);margin-left:6px}
+.hint{font-size:.85rem;color:var(--ink-soft);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+kbd{font-family:var(--mono);border:1px solid var(--ink-soft);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:.8rem;background:var(--paper)}
+.cloud{font-family:var(--mono);font-size:.75rem;border:1.5px solid var(--ink-soft);border-radius:999px;padding:2px 9px;background:var(--paper)}
+.cloud.on{border-color:var(--ok);color:var(--ok)}
+
+.left{display:flex;flex-direction:column;gap:20px;align-items:center;min-width:0}
+.postit{background:var(--postit);width:100%;max-width:380px;padding:16px 20px 20px;transform:rotate(-1.5deg);
+  box-shadow:0 10px 18px -10px rgba(29,43,79,.45);border-bottom:3px solid var(--postit-edge)}
+.postit .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft)}
+.title{font-family:var(--display);font-size:1.15rem;color:var(--pen);margin-bottom:2px}
+.count{font-family:var(--display);font-weight:700;font-size:2.7rem;line-height:1.05;font-variant-numeric:tabular-nums;word-break:break-all}
+.rate{font-family:var(--mono);font-size:.85rem}
+.buffs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.buffs span{background:var(--paper);border:1.5px solid var(--pen);color:var(--pen);font-size:.75rem;font-weight:600;padding:2px 7px;border-radius:4px}
+.stamp{position:relative;width:min(230px,66vw);aspect-ratio:1;max-width:100%;border-radius:50%;border:none;cursor:pointer;
+  background:radial-gradient(circle at 35% 30%,#ff7b7b,var(--red) 60%,#9c2525);color:#fff;
+  font-family:var(--display);font-size:1.6rem;font-weight:700;line-height:1.1;
+  box-shadow:0 10px 0 #7d1d1d,0 18px 24px -8px rgba(0,0,0,.4);transition:transform .06s,box-shadow .06s;user-select:none;-webkit-tap-highlight-color:transparent}
+.stamp:active{transform:translateY(8px);box-shadow:0 2px 0 #7d1d1d,0 6px 10px -4px rgba(0,0,0,.4)}
+.stamp:focus-visible{outline:3px dashed var(--pen);outline-offset:8px}
+.stamp span{display:block;font-size:.8rem;font-family:var(--mono);font-weight:500;opacity:.9;margin-top:6px}
+.combo{width:100%;max-width:260px;font-size:.8rem;display:grid;gap:4px}
+.combo .bar{height:8px;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden;background:var(--paper)}
+.combo .bar i{display:block;height:100%;width:0;background:var(--red);transition:width .1s}
+.float{position:fixed;pointer-events:none;font-family:var(--display);font-weight:700;color:var(--pen);font-size:1.3rem;animation:up .9s ease-out forwards;z-index:30}
+.float.crit{color:var(--red);font-size:1.9rem}
+@keyframes up{to{transform:translateY(-70px);opacity:0}}
+.ticker{width:100%;max-width:420px;font-family:var(--display);font-size:1.05rem;border-left:3px solid var(--pen);padding:4px 0 4px 12px;min-height:3.2em}
+.ticker b{color:var(--pen)}
+
+.panel{min-width:0;display:flex;flex-direction:column;gap:14px}
+h2{font-family:var(--display);font-size:1.45rem;margin:0;color:var(--pen)}
+h2 + p{margin:-6px 0 0;color:var(--ink-soft);font-size:.88rem;max-width:62ch}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:600 .82rem var(--body);background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,.row:focus-visible,.upg:focus-visible,.btn:focus-visible,.perk:focus-visible{outline:2px dashed var(--pen);outline-offset:2px}
+.view{display:flex;flex-direction:column;gap:12px;min-width:0}
+.buymode{display:flex;gap:6px;align-items:center;font-size:.8rem;color:var(--ink-soft)}
+.buymode button{font:600 .78rem var(--mono);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);border-radius:4px;padding:2px 8px;cursor:pointer}
+.buymode button[aria-pressed="true"]{background:var(--pen);border-color:var(--pen);color:#fff}
+
+.list{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;text-align:left;width:100%;
+  background:rgba(251,252,250,.94);border:1.5px solid var(--grid);border-radius:6px;padding:8px 12px;cursor:pointer;color:var(--ink);font:inherit}
+.row:hover:not([disabled]){border-color:var(--pen)}
+.row[disabled]{opacity:.5;cursor:not-allowed}
+.row.locked .name,.row.locked .desc{filter:blur(4px)}
+.name{font-weight:600}
+.desc{grid-column:1;font-size:.8rem;color:var(--ink-soft)}
+.owned{font-family:var(--display);font-size:1.6rem;font-weight:700;grid-row:1/3;grid-column:2;text-align:right;line-height:1}
+.cost{font-family:var(--mono);font-size:.78rem;color:var(--pen)}
+.meta{display:flex;gap:10px;flex-wrap:wrap}
+
+.upgrades{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.upg{text-align:left;background:var(--postit);border:none;border-bottom:3px solid var(--postit-edge);padding:9px 12px;cursor:pointer;font:inherit;color:var(--ink);display:flex;flex-direction:column;gap:3px}
+.upg.click{background:var(--pink);border-bottom-color:#f093b0}
+.upg[disabled]{opacity:.5;cursor:not-allowed}
+.upg .name{font-family:var(--display);font-size:1.02rem;line-height:1.15}
+.empty{font-size:.9rem;color:var(--ink-soft);font-style:italic;margin:0}
+
+.quest{border:1.5px solid var(--ink);border-radius:6px;padding:10px 12px;background:rgba(251,252,250,.94);display:grid;gap:6px}
+.quest .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.qbar{height:10px;border:1.5px solid var(--ink);border-radius:5px;overflow:hidden}
+.qbar i{display:block;height:100%;background:var(--ok)}
+.quest .btn{justify-self:start}
+
+.perks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.perk{text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:1.5px dashed var(--ink-soft);border-radius:6px;padding:9px 12px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
+.perk.got{border-style:solid;border-color:var(--ok);background:#eaf6ee;cursor:default}
+.perk[disabled]:not(.got){opacity:.5;cursor:not-allowed}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;font-size:.88rem}
+.stats div{border-top:1.5px solid var(--ink);padding-top:6px}
+.stats b{display:block;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ach{display:flex;flex-wrap:wrap;gap:5px}
+.ach span{font-size:.76rem;border:1.5px dashed var(--ink-soft);border-radius:4px;padding:2px 7px;color:var(--ink-soft)}
+.ach span.got{border-style:solid;border-color:var(--ok);color:var(--ok);font-weight:600}
+.btn{font:600 .88rem var(--body);background:var(--ink);color:var(--paper);border:none;border-radius:6px;padding:8px 14px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--red);border:1.5px solid var(--red)}
+.btn.soft{background:transparent;color:var(--ink);border:1.5px solid var(--ink-soft)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.acct{display:grid;gap:10px;border:1.5px solid var(--ink);border-radius:6px;padding:12px;background:rgba(251,252,250,.94)}
+.field{display:grid;gap:4px;font-size:.85rem}
+.field input{flex:1 1 200px;min-width:0;font:inherit;border:1.5px solid var(--ink-soft);border-radius:6px;padding:7px 10px;background:var(--paper);color:var(--ink)}
+textarea{width:100%;min-height:70px;font:12px var(--mono);border:1.5px solid var(--ink-soft);border-radius:6px;padding:8px;background:var(--paper);color:var(--ink);box-sizing:border-box}
+
+table.board{width:100%;border-collapse:collapse;font-size:.9rem}
+.board td,.board th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--grid)}
+.board th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:600}
+.board td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.board tr.me td{background:var(--postit)}
+
+.golden{position:fixed;z-index:40;cursor:pointer;background:var(--paper);border:2px solid var(--pen);border-radius:4px;
+  padding:8px 12px;font:700 .9rem var(--body);color:var(--pen);box-shadow:0 6px 0 var(--pen);animation:wobble 1.2s ease-in-out infinite;max-width:240px}
+.golden.bad{border-color:var(--red);color:var(--red);box-shadow:0 6px 0 var(--red)}
+@keyframes wobble{50%{transform:rotate(3deg) scale(1.05)}}
+.toasts{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:6px;align-items:center;width:max-content;max-width:calc(100% - 32px)}
+.toast{background:var(--ink);color:var(--paper);padding:9px 15px;border-radius:6px;font-size:.88rem}
+
+#boss{position:fixed;inset:0;z-index:100;background:#fff;color:#222;font:13px/1.3 Calibri,Arial,sans-serif;overflow:auto}
+#boss .bar{background:#217346;color:#fff;padding:8px 12px;font-weight:600}
+#boss .menu{background:#f3f3f3;border-bottom:1px solid #ccc;padding:6px 12px;color:#444}
+#boss table{border-collapse:collapse;min-width:900px}
+#boss td,#boss th{border:1px solid #d4d4d4;padding:3px 8px;white-space:nowrap}
+#boss th{background:#f3f3f3;font-weight:normal;color:#555}
+@media (prefers-reduced-motion:reduce){.float,.golden{animation:none}.stamp{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Open Space Tycoon <small>bâtis ton empire du tertiaire</small></h1>
+    <div class="hint"><span>Manager en approche ? <kbd>Échap</kbd> ouvre un tableur très sérieux.</span><span class="cloud" id="cloud">Sauvegarde locale</span></div>
+  </header>
+
+  <section class="left">
+    <div class="postit">
+      <div class="title" id="rank">Stagiaire non rémunéré</div>
+      <div class="lbl">Tâches bouclées</div>
+      <div class="count" id="count">0</div>
+      <div class="rate"><span id="rate">0</span> / s · <span id="clickval">1</span> par clic</div>
+      <div class="buffs" id="buffs"></div>
+    </div>
+    <button class="stamp" id="stamp" aria-label="Valider une tâche">VALIDÉ<span>clique en rythme</span></button>
+    <div class="combo"><div style="display:flex;justify-content:space-between"><span>Combo café</span><b id="comboTxt">×1,00</b></div><div class="bar"><i id="comboBar"></i></div></div>
+    <div class="ticker" id="ticker"></div>
+  </section>
+
+  <section class="panel">
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" aria-selected="true" data-tab="hire">Recrutements</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="upg">Améliorations</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="quest">Objectifs</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="cv">CV</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="board">Classement</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="stats">Carrière</button>
+    </div>
+
+    <div class="view" id="v-hire">
+      <div class="buymode" id="buymode">Acheter par
+        <button data-n="1" aria-pressed="true">1</button><button data-n="10" aria-pressed="false">10</button><button data-n="100" aria-pressed="false">100</button><button data-n="max" aria-pressed="false">max</button>
+      </div>
+      <div class="list" id="hireList"></div>
+    </div>
+
+    <div class="view" id="v-upg" hidden>
+      <div class="btns"><button class="btn soft" id="buyAllUpg">Tout acheter (le moins cher d'abord)</button></div>
+      <div class="upgrades" id="upgList"></div>
+    </div>
+
+    <div class="view" id="v-quest" hidden>
+      <h2>Objectifs du trimestre</h2>
+      <p>Le N+1 fixe des objectifs. Remplis-les pour toucher une prime. Un objectif trop dur peut être reporté au prochain entretien annuel (une fois par minute).</p>
+      <div class="list" id="questList"></div>
+    </div>
+
+    <div class="view" id="v-cv" hidden>
+      <h2>Démission</h2>
+      <p>Tu repars de zéro dans un nouveau poste, mais tu gardes ton expérience, tes trophées et ton CV. Chaque point d'XP donne +5 % de production pour toujours, et autant de lignes de CV à dépenser ci-dessous.</p>
+      <div class="btns">
+        <button class="btn ghost" id="quit">Démissionner (+<span id="xpgain">0</span> XP)</button>
+        <button class="btn ghost" id="quitYes" hidden>Oui, je pose ma lettre</button>
+        <span id="xpNext" style="font-size:.82rem;color:var(--ink-soft)"></span>
+      </div>
+      <h2>Lignes de CV</h2>
+      <p>Compétences permanentes. Tu as <b id="tokens">0</b> ligne(s) de CV disponible(s).</p>
+      <div class="perks" id="perkList"></div>
+    </div>
+
+    <div class="view" id="v-board" hidden>
+      <h2>Classement de l'étage</h2>
+      <p>Tous les joueurs, triés par tâches bouclées sur toute leur carrière. Mis à jour chaque minute.</p>
+      <div class="acct">
+        <div class="field"><label for="pseudo">Ton pseudo au classement</label><div class="btns"><input id="pseudo" maxlength="24" placeholder="ex. Roi du tampon"><button class="btn" id="pseudoSave">Enregistrer</button></div></div>
+        <p class="empty" id="acctStatus"></p>
+        <div class="field" id="emailRow"><label for="email">Ton email (lien de connexion, sans mot de passe)</label><div class="btns"><input id="email" type="email" placeholder="prenom.nom@exemple.fr"><button class="btn soft" id="magic">Recevoir le lien</button></div></div>
+        <div class="btns"><button class="btn soft" id="logout" hidden>Se déconnecter</button></div>
+      </div>
+      <div id="boardBox"><p class="empty">Chargement du classement…</p></div>
+    </div>
+
+    <div class="view" id="v-stats" hidden>
+      <div class="stats" id="stats"></div>
+      <h2>Trophées</h2>
+      <p>Chaque trophée donne +1 % de production. <b id="achCount"></b></p>
+      <div class="ach" id="ach"></div>
+      <h2>Sauvegarde</h2>
+      <p>Ta partie est sauvegardée automatiquement. Tu peux aussi copier un code de sauvegarde pour la transférer à la main.</p>
+      <div class="btns">
+        <button class="btn soft" id="exportBtn">Copier mon code</button>
+        <button class="btn soft" id="importBtn">Charger un code</button>
+        <button class="btn soft" id="saveNow">Sauvegarder maintenant</button>
+        <button class="btn ghost" id="reset">Tout effacer</button>
+        <button class="btn ghost" id="resetYes" hidden>Confirmer l'effacement total</button>
+      </div>
+      <textarea id="saveCode" aria-label="Code de sauvegarde" placeholder="Colle un code de sauvegarde ici puis clique sur « Charger un code »"></textarea>
+    </div>
+  </section>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<div id="boss" hidden>
+  <div class="bar">Budget_Previsionnel_T4_v12_FINAL_vraiment_final.xlsx</div>
+  <div class="menu">Fichier &nbsp; Accueil &nbsp; Insertion &nbsp; Formules &nbsp; Données &nbsp; Révision &nbsp; Affichage</div>
+  <div style="overflow-x:auto"><table id="bossTable"></table></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- Content ---------- */
+const H = [
+  {id:"stag", name:"Stagiaire motivé", desc:"Fait des photocopies avec enthousiasme.", base:15, rate:0.2},
+  {id:"cafe", name:"Machine à café", desc:"Le vrai moteur de l'entreprise.", base:110, rate:1},
+  {id:"reu",  name:"Réunion « rapide »", desc:"Prévue 15 min, dure 1h30.", base:1200, rate:8},
+  {id:"xls",  name:"Excel plein de macros", desc:"Personne ne sait qui l'a écrit.", base:13000, rate:47},
+  {id:"cons", name:"Consultant externe", desc:"Facture un PowerPoint de 80 slides.", base:1.4e5, rate:260},
+  {id:"semi", name:"Séminaire au vert", desc:"Team building et accrobranche.", base:1.5e6, rate:1400},
+  {id:"reorg",name:"Réorganisation stratégique", desc:"Tout change pour que rien ne change.", base:2e7, rate:7800},
+  {id:"ia",   name:"IA générative", desc:"Rédige les mails que personne ne lit.", base:3.3e8, rate:44000},
+  {id:"syn",  name:"Synergie transverse", desc:"Concept que nul n'a jamais défini.", base:5.1e9, rate:2.6e5},
+  {id:"lic",  name:"Licorne en open space", desc:"Valorisée 3 milliards, zéro chiffre d'affaires.", base:7.5e10, rate:1.6e6},
+  {id:"rach", name:"Rachat d'un concurrent", desc:"On garde le logo, on vire le reste.", base:1e12, rate:1e7},
+  {id:"tour", name:"Tour à La Défense", desc:"48 étages, 2 ascenseurs qui marchent.", base:1.4e13, rate:6.5e7},
+  {id:"meta", name:"Cabinet de conseil en conseil", desc:"Conseille les consultants sur leurs conseils.", base:1.7e14, rate:4.3e8},
+  {id:"orb",  name:"Coworking en orbite", desc:"Le flex office, en apesanteur.", base:2.1e15, rate:2.9e9},
+  {id:"multi",name:"Multivers de réunions", desc:"Chaque réunion en engendre une infinité d'autres.", base:2.6e16, rate:2.1e10}
+];
+const HB = Object.fromEntries(H.map(h=>[h.id,h]));
+
+const tiers = [[1,10,"Fiche de poste claire"],[5,50,"Formation e-learning"],[25,500,"Badge d'accès premium"],[50,5e4,"Bureau près de la fenêtre"],
+  [100,5e6,"Titre de « Head of »"],[150,5e8,"Voiture de fonction"],[200,5e10,"Stock-options"],[250,5e12,"Parachute doré"]];
+const U = [];
+tiers.forEach(([n,m,tn])=>H.forEach(h=>U.push({id:h.id+"_"+n,kind:"b",name:tn+" : "+h.name,desc:h.name+" ×2 (dès "+n+")",cost:h.base*m,req:s=>s.owned[h.id]>=n,apply:M=>{M.mult[h.id]*=2}})));
+[[100,"Souris ergonomique",1],[500,"Raccourcis clavier",5],[1e4,"Double écran",25],[1e5,"Siège gamer validé RH",50],[1e7,"Tampon « VALIDÉ » en or",100],
+ [1e9,"Clavier mécanique qui claque",200],[1e11,"Télépathie managériale",300],[1e13,"Clic quantique",400]].forEach(([c,n,cl],i)=>
+  U.push({id:"click"+i,kind:"c",name:n,desc:"Clic ×2 et +1 % de ta production par seconde à chaque clic",cost:c,req:s=>s.clicks>=cl,apply:M=>{M.clickMult*=2;M.clickPct+=0.01}}));
+[[5e4,"Capsules de café premium"],[5e6,"Babyfoot à la cafét'"],[5e8,"Semaine de 4 jours"],[5e10,"Télétravail illimité"],[5e12,"Sieste sur la moquette"],[5e14,"Afterwork tous les soirs"],[5e16,"Comité de direction en tongs"],[5e18,"Bonheur au travail certifié ISO"]].forEach(([c,n],i)=>
+  U.push({id:"glob"+i,kind:"g",name:n,desc:"Toute la production +25 %",cost:c,req:s=>s.total>=c/5,apply:M=>{M.global*=1.25}}));
+[["stag","ia","Stagiaires boostés par l'IA",0.05],["cafe","reu","Café servi en réunion",0.03],["xls","cons","Le consultant comprend la macro",0.02],
+ ["semi","reorg","Séminaire de réorganisation",0.02],["syn","lic","Synergie licorne",0.01],["rach","tour","Siège consolidé",0.01],["meta","orb","Conseil en apesanteur",0.01]].forEach(([a,b,n,p])=>
+  U.push({id:"syn_"+a+b,kind:"s",name:n,desc:HB[a].name+" +"+(p*100)+" % par "+HB[b].name.toLowerCase(),cost:HB[b].base*30,req:s=>s.owned[a]>=15&&s.owned[b]>=5,apply:M=>{M.syn.push([a,b,p])}}));
+U.sort((a,b)=>a.cost-b.cost);
+const UB = Object.fromEntries(U.map(u=>[u.id,u]));
+
+const PERKS = [
+  {id:"net",  name:"Réseau LinkedIn", desc:"Chaque nouveau poste démarre avec 10 stagiaires et 5 machines à café.", cost:1},
+  {id:"tele", name:"Télétravail assumé", desc:"Production hors-ligne à 100 % au lieu de 50 %, jusqu'à 12 h.", cost:2},
+  {id:"crit", name:"Doigts d'or", desc:"5 % de chances qu'un clic vaille ×10.", cost:2},
+  {id:"quest4",name:"Multitâche", desc:"4 objectifs en parallèle au lieu de 3.", cost:2},
+  {id:"gold", name:"Bouche-à-oreille", desc:"Les surprises arrivent deux fois plus souvent.", cost:3},
+  {id:"nego", name:"Négociateur", desc:"Recrutements 10 % moins chers.", cost:3},
+  {id:"combo",name:"Café serré", desc:"Le combo café monte jusqu'à ×5 au lieu de ×3.", cost:3},
+  {id:"charm",name:"Charisme", desc:"Les bonus des surprises durent deux fois plus longtemps.", cost:4},
+  {id:"bonus",name:"Primes négociées", desc:"Récompenses des objectifs ×3.", cost:4},
+  {id:"mentor",name:"Mentor", desc:"+50 % d'XP à chaque démission.", cost:6},
+  {id:"keepu",name:"Mémoire d'éléphant", desc:"Garde les améliorations de clic à la démission.", cost:6},
+  {id:"amb",  name:"Ambition", desc:"Chaque trophée donne +2 % au lieu de +1 %.", cost:8},
+  {id:"auto", name:"Stagiaire cliqueur", desc:"Un stagiaire clique 5 fois par seconde pour toi.", cost:10},
+  {id:"ceo",  name:"Carnet d'adresses du CAC 40", desc:"Toute la production ×2.", cost:15}
+];
+
+const RANKS = [[0,"Stagiaire non rémunéré"],[1e3,"Alternant"],[1e5,"Assistant administratif"],[1e7,"Chargé de mission"],[1e9,"Chef de projet"],[1e11,"Manager de managers"],
+ [1e13,"Directeur de pôle"],[1e15,"VP Synergies"],[1e17,"Directeur général"],[1e19,"Président du conseil"],[1e21,"Légende du CAC 40"],[1e24,"Entité corporate cosmique"]];
+
+const ACH = [
+  ["Premier mail",s=>s.clicks>=1],["Tendinite naissante",s=>s.clicks>=500],["Clic olympique",s=>s.clicks>=5000],["Le doigt d'acier",s=>s.clicks>=25000],
+  ["Mille tâches",s=>s.allTime>=1e3],["Un million",s=>s.allTime>=1e6],["Un milliard",s=>s.allTime>=1e9],["Mille milliards",s=>s.allTime>=1e12],["Un billiard",s=>s.allTime>=1e15],["Au-delà du PIB mondial",s=>s.allTime>=1e18],
+  ["100 par seconde",s=>s.bestRate>=100],["10 000 par seconde",s=>s.bestRate>=1e4],["Un million par seconde",s=>s.bestRate>=1e6],["Un milliard par seconde",s=>s.bestRate>=1e9],
+  ["Équipe complète",s=>H.slice(0,10).every(h=>s.owned[h.id]>=1)],["Organigramme XXL",s=>H.every(h=>s.owned[h.id]>=1)],
+  ["Mail du DG intercepté",s=>s.goldens>=1],["Lèche-bottes certifié",s=>s.goldens>=25],["Chasseur de primes",s=>s.goldens>=100],
+  ["Première démission",s=>s.resets>=1],["CV à rallonge",s=>s.resets>=5],["Job-hopper",s=>s.resets>=15],
+  ["Planqué",s=>s.bossOpens>=5],["Maître de l'Alt-Tab",s=>s.bossOpens>=50],
+  ["Une heure de présence",s=>s.played>=3600],["Deux heures, objectif atteint",s=>s.played>=7200],["Une journée complète",s=>s.played>=28800],
+  ["Objectif rempli",s=>s.questsDone>=1],["Employé du mois",s=>s.questsDone>=20],["Employé de l'année",s=>s.questsDone>=100],
+  ["Combo barista",s=>s.maxCombo>=30],["Combo expresso",s=>s.maxCombo>=60],
+  ["Cent améliorations",s=>s.upg.length>=100],["Collectionneur de badges",s=>s.upg.length>=60]
+];
+H.forEach(h=>[50,100,200].forEach(n=>ACH.push([n+" × "+h.name,s=>s.owned[h.id]>=n])));
+
+const NEWS = [
+  "Le serveur de fichiers a encore planté. <b>Personne n'est surpris.</b>",
+  "Note de service : merci de ne plus <b>voler les yaourts du frigo</b>.",
+  "Kevin de la compta a répondu à tous. <b>Encore.</b>",
+  "Point d'étape prévu pour préparer le point d'étape de jeudi.",
+  "La machine à café affiche « détartrage ». <b>Panique générale au 3e.</b>",
+  "Le DG annonce « une année de transformation ». <b>Comme l'an dernier.</b>",
+  "Quelqu'un a collé un Post-it « NE PAS TOUCHER » sur l'imprimante. <b>Elle marche enfin.</b>",
+  "Rappel : le séminaire « bien-être » est <b>obligatoire</b>.",
+  "Visio de 14h : 12 participants, <b>11 micros coupés, 1 aspirateur en fond</b>.",
+  "Le fichier final s'appelle désormais <b>final_v3_OK_relu</b>.",
+  "Les RH lancent un sondage sur la surcharge de sondages.",
+  "Un consultant propose de <b>repenser le paradigme</b>. Facture jointe.",
+  "Il reste des croissants en salle B. <b>Courez.</b>",
+  "L'open space passe en flex office. <b>Il reste 3 chaises pour 40.</b>",
+  "Vendredi après-midi : la productivité de l'étage tend vers zéro.",
+  "Le ticket ouvert en 2019 vient de passer <b>« en cours »</b>.",
+  "La clim est réglée sur 16 °C. <b>Les doudounes sont de sortie.</b>",
+  "Nouveau process : il faut un ticket pour ouvrir un ticket.",
+  "Le stagiaire a trouvé comment marche l'imprimante. <b>Il est promu.</b>",
+  "Afterwork annulé faute de salle. <b>La salle était réservée pour l'afterwork.</b>",
+  "Le mot « disruptif » a été prononcé <b>47 fois</b> ce matin.",
+  "Un collègue mange du poisson au micro-ondes. <b>Évacuation de l'aile ouest.</b>",
+  "Le badge ne marche plus. <b>Il faut un badge pour aller chercher un badge.</b>",
+  "La réunion aurait pu être un mail. <b>Le mail aurait pu ne pas exister.</b>",
+  "Les objectifs de l'an prochain sont « ambitieux mais réalistes ». <b>Surtout ambitieux.</b>",
+  "Le CODIR valide un nouveau logo. <b>Il est bleu, comme l'ancien.</b>"
+];
+
+/* ---------- State ---------- */
+const KEY="openspace-tycoon-v2";
+const PERSIST=["allTime","ach","xp","tokens","perks","resets","goldens","bossOpens","played","clicks","questsDone","maxCombo","bestRate","pseudo"];
+function fresh(keep){
+  const owned={}; H.forEach(h=>owned[h.id]=0);
+  const s={tasks:0,total:0,allTime:0,clicks:0,owned,upg:[],ach:[],xp:0,tokens:0,perks:[],resets:0,goldens:0,bossOpens:0,played:0,
+    questsDone:0,maxCombo:0,bestRate:0,quests:[],questSkip:0,last:Date.now(),savedAt:0};
+  if(keep) PERSIST.forEach(k=>{ if(keep[k]!==undefined) s[k]=keep[k]; });
+  return s;
+}
+function normalize(d){
+  const s=Object.assign(fresh(),d||{});
+  H.forEach(h=>{ if(typeof s.owned[h.id]!=="number") s.owned[h.id]=0; });
+  ["upg","ach","perks","quests"].forEach(k=>{ if(!Array.isArray(s[k])) s[k]=[]; });
+  s.upg=s.upg.filter(id=>UB[id]);
+  return s;
+}
+let S=fresh();
+try{ const raw=localStorage.getItem(KEY)||localStorage.getItem("openspace-tycoon-v1"); if(raw) S=normalize(JSON.parse(raw)); }catch(e){}
+
+const has=p=>S.perks.includes(p);
+let buffs=[]; // {name, kind:'prod'|'click'|'cost', mult, until}
+let combo=0, lastClick=0;
+let M;
+function mods(){
+  const m={mult:{},clickMult:1,clickPct:0,global:1,syn:[]};
+  H.forEach(h=>m.mult[h.id]=1);
+  S.upg.forEach(id=>UB[id]&&UB[id].apply(m));
+  m.global*=(1+S.xp*0.05)*(1+S.ach.length*(has("amb")?0.02:0.01))*(has("ceo")?2:1);
+  return m;
+}
+M=mods();
+function buffMult(kind){ let x=1; const now=Date.now(); buffs.forEach(b=>{ if(b.kind===kind&&b.until>now) x*=b.mult; }); return x; }
+function prodOf(h){
+  let p=h.rate*M.mult[h.id];
+  M.syn.forEach(([a,b,pc])=>{ if(a===h.id) p*=1+S.owned[b]*pc; });
+  return p*M.global;
+}
+function rate(){ let r=0; H.forEach(h=>r+=prodOf(h)*S.owned[h.id]); return r*buffMult("prod"); }
+function comboMult(){ const max=has("combo")?5:3; return 1+Math.min(combo,50)/50*(max-1); }
+function clickVal(){ return (M.clickMult+rate()*M.clickPct)*(1+S.xp*0.05)*buffMult("click")*comboMult(); }
+function unitCost(h,k){ return h.base*Math.pow(1.15,k)*(has("nego")?0.9:1)*buffMult("cost"); }
+function costN(h,n){ const o=S.owned[h.id]; const r=1.15; return unitCost(h,o)*(Math.pow(r,n)-1)/(r-1); }
+function maxAfford(h){ const u=unitCost(h,S.owned[h.id]); let n=Math.floor(Math.log(S.tasks*0.15/u+1)/Math.log(1.15)); n=Math.max(0,Math.min(n,1000)); while(n>0&&costN(h,n)>S.tasks) n--; return n; }
+
+const units=[[1e33,"Dc"],[1e30,"No"],[1e27,"Oc"],[1e24,"Sp"],[1e21,"Sx"],[1e18,"Qi"],[1e15,"Qa"],[1e12,"T"],[1e9,"Md"],[1e6,"M"],[1e3,"k"]];
+function fmt(n){
+  if(!isFinite(n)) return "∞";
+  if(n<1000) return (n<10 && n%1) ? n.toFixed(1).replace(".",",") : Math.floor(n).toLocaleString("fr-FR");
+  for(const [v,u] of units) if(n>=v){ const x=n/v; return x.toFixed(x>=100?0:x>=10?1:2).replace(".",",")+" "+u; }
+  return n.toExponential(2);
+}
+function gain(n){ S.tasks+=n; S.total+=n; S.allTime+=n; }
+const $=id=>document.getElementById(id);
+function esc(t){ return String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; $("toasts").appendChild(t); setTimeout(()=>t.remove(),3500); }
+
+/* ---------- Clicking ---------- */
+function doClick(x,y,auto){
+  const now=Date.now();
+  if(!auto){ combo = (now-lastClick<450) ? combo+1 : Math.max(0,combo-3); lastClick=now; S.maxCombo=Math.max(S.maxCombo,combo); }
+  let v=clickVal(), crit=false;
+  if(has("crit") && Math.random()<0.05){ v*=10; crit=true; }
+  gain(v); S.clicks++;
+  S.quests.forEach(q=>{ if(q.type==="combo") q.best=Math.max(q.best||0,combo); });
+  if(x!=null){
+    const f=document.createElement("div"); f.className="float"+(crit?" crit":""); f.textContent="+"+fmt(v)+(crit?" !":"");
+    f.style.left=(x-20+Math.random()*30)+"px"; f.style.top=(y-30)+"px";
+    document.body.appendChild(f); setTimeout(()=>f.remove(),900);
+  }
+}
+$("stamp").addEventListener("click",e=>{
+  const r=$("stamp").getBoundingClientRect();
+  doClick(e.clientX||r.left+r.width/2, e.clientY||r.top+r.height/3, false); renderTop();
+});
+
+/* ---------- Hires ---------- */
+let buyN=1;
+$("buymode").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+  buyN = b.dataset.n==="max" ? "max" : +b.dataset.n;
+  $("buymode").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderHires(); });
+H.forEach(h=>{
+  const b=document.createElement("button"); b.className="row"; b.id="h-"+h.id;
+  b.innerHTML=`<div class="name">${h.name}</div><div class="owned"></div><div class="desc">${h.desc}</div><div class="meta"><span class="cost c1"></span><span class="cost c2" style="color:var(--ink-soft)"></span></div>`;
+  b.addEventListener("click",()=>{
+    const n = buyN==="max" ? maxAfford(h) : buyN; if(n<1) return;
+    const c=costN(h,n); if(S.tasks>=c){ S.tasks-=c; S.owned[h.id]+=n; renderAll(true); }
+  });
+  $("hireList").appendChild(b);
+});
+function renderHires(){
+  let prevVisible=true;
+  H.forEach((h,i)=>{
+    const b=$("h-"+h.id);
+    const visible = i===0 || S.owned[h.id]>0 || S.owned[H[i-1].id]>0 || S.total>=h.base*0.5;
+    b.hidden = !(visible||prevVisible); b.classList.toggle("locked",!visible); prevVisible=visible;
+    const n = buyN==="max" ? Math.max(1,maxAfford(h)) : buyN, c=costN(h,n);
+    b.disabled = S.tasks<c;
+    b.querySelector(".owned").textContent=S.owned[h.id];
+    b.querySelector(".c1").textContent=(n>1?"×"+n+" : ":"Coût : ")+fmt(c);
+    b.querySelector(".c2").textContent="+"+fmt(prodOf(h))+"/s chacun";
+  });
+}
+
+/* ---------- Upgrades ---------- */
+function availUpg(){ return U.filter(u=>!S.upg.includes(u.id)&&u.req(S)); }
+function buyUpg(u){ if(S.tasks>=u.cost&&!S.upg.includes(u.id)){ S.tasks-=u.cost; S.upg.push(u.id); M=mods(); return true; } return false; }
+let upgKey="";
+function renderUpg(force){
+  const av=availUpg().slice(0,24);
+  const key=av.map(u=>u.id+(S.tasks>=u.cost?1:0)).join();
+  if(!force && key===upgKey) return; upgKey=key;
+  const el=$("upgList"); el.innerHTML="";
+  if(!av.length){ el.innerHTML='<p class="empty">Aucune amélioration disponible. Recrute encore, ou clique davantage.</p>'; return; }
+  av.forEach(u=>{
+    const b=document.createElement("button"); b.className="upg"+(u.kind==="c"?" click":""); b.disabled=S.tasks<u.cost;
+    b.innerHTML=`<span class="name">${esc(u.name)}</span><span class="desc">${esc(u.desc)}</span><span class="cost">${fmt(u.cost)}</span>`;
+    b.addEventListener("click",()=>{ if(buyUpg(u)) renderAll(true); });
+    el.appendChild(b);
+  });
+}
+$("buyAllUpg").addEventListener("click",()=>{ let k=0; availUpg().forEach(u=>{ if(buyUpg(u)) k++; }); if(k) toast(k+" amélioration(s) achetée(s)"); renderAll(true); });
+
+/* ---------- Quests ---------- */
+function rnd(a,b){ return a+Math.random()*(b-a); }
+function newQuest(){
+  const r=Math.max(rate(),1), types=["earn","clicks","buy","combo","golden","earn","buy"];
+  const t=types[Math.floor(Math.random()*types.length)];
+  const owned=H.filter((h,i)=>i===0||S.owned[h.id]>0||S.owned[H[i-1].id]>0);
+  const reward=Math.max(r*rnd(240,480),300);
+  if(t==="earn"){ const target=Math.max(r*rnd(120,300),200); return {type:t,target,base:S.total,reward,label:"Boucler "+fmt(target)+" tâches"}; }
+  if(t==="clicks"){ const n=Math.round(rnd(10,40))*10; return {type:t,target:n,base:S.clicks,reward,label:"Valider "+n+" tâches à la main"}; }
+  if(t==="buy"){ const h=owned[Math.floor(Math.random()*owned.length)]; const n=Math.round(rnd(3,12)); return {type:t,bid:h.id,target:n,base:S.owned[h.id],reward,label:"Recruter "+n+" × "+h.name}; }
+  if(t==="combo"){ const n=Math.round(rnd(15,40)); return {type:t,target:n,best:0,reward,label:"Atteindre un combo café de "+n}; }
+  return {type:"golden",target:1,base:S.goldens,reward:reward*1.5,label:"Intercepter une surprise de la direction"};
+}
+function qProg(q){
+  if(q.type==="earn") return S.total-q.base;
+  if(q.type==="clicks") return S.clicks-q.base;
+  if(q.type==="buy") return (S.owned[q.bid]||0)-q.base;
+  if(q.type==="combo") return q.best||0;
+  return S.goldens-q.base;
+}
+function fillQuests(){ const n=has("quest4")?4:3; while(S.quests.length<n) S.quests.push(newQuest()); }
+let questKey="";
+function renderQuests(force){
+  const key=S.quests.map(q=>q.label+Math.floor(Math.min(1,qProg(q)/q.target)*50)).join()+S.questSkip;
+  if(!force && key===questKey) return; questKey=key;
+  const el=$("questList"); el.innerHTML="";
+  S.quests.forEach((q,i)=>{
+    const p=Math.min(1,qProg(q)/q.target), done=p>=1, rw=q.reward*(has("bonus")?3:1);
+    const d=document.createElement("div"); d.className="quest";
+    d.innerHTML=`<div class="top"><b>${esc(q.label)}</b><span class="cost">Prime : ${fmt(rw)}</span></div>
+      <div class="qbar"><i style="width:${(p*100).toFixed(1)}%"></i></div>
+      <div class="btns"><button class="btn">${done?"Encaisser la prime":"En cours"}</button><button class="btn soft">Reporter</button></div>`;
+    const [bc,bs]=d.querySelectorAll("button");
+    bc.disabled=!done;
+    bc.addEventListener("click",()=>{ if(Math.min(1,qProg(q)/q.target)<1) return; gain(rw); S.questsDone++; S.quests.splice(i,1); fillQuests(); toast("Prime encaissée : +"+fmt(rw)); renderAll(true); });
+    bs.disabled=Date.now()-S.questSkip<60000;
+    bs.addEventListener("click",()=>{ S.questSkip=Date.now(); S.quests.splice(i,1); fillQuests(); renderAll(true); });
+    el.appendChild(d);
+  });
+}
+function readyQuests(){ return S.quests.filter(q=>qProg(q)>=q.target).length; }
+
+/* ---------- Prestige & perks ---------- */
+function xpTotalFor(t){ return Math.floor(Math.sqrt(t/1e6)*(has("mentor")?1.5:1)); }
+function xpGain(){ return xpTotalFor(S.total); }
+$("quit").addEventListener("click",()=>{ $("quitYes").hidden=false; });
+$("quitYes").addEventListener("click",()=>{
+  const g=xpGain(); if(g<1) return;
+  const keepClick = has("keepu") ? S.upg.filter(id=>UB[id].kind==="c") : [];
+  const old=S; S=fresh(old); S.xp+=g; S.tokens+=g; S.resets++; S.upg=keepClick;
+  if(has("net")){ S.owned.stag=10; S.owned.cafe=5; }
+  M=mods(); fillQuests(); $("quitYes").hidden=true; toast("Nouveau poste ! +"+g+" XP"); saveAll(true); renderAll(true);
+});
+function renderCV(){
+  const g=xpGain(); $("xpgain").textContent=g; $("quit").disabled=g<1; $("tokens").textContent=S.tokens;
+  const need=Math.pow((g+1)/(has("mentor")?1.5:1),2)*1e6;
+  $("xpNext").textContent="Prochain point d'XP à "+fmt(need)+" tâches dans ce poste";
+  const el=$("perkList"); el.innerHTML="";
+  PERKS.forEach(p=>{
+    const got=has(p.id), b=document.createElement("button");
+    b.className="perk"+(got?" got":""); b.disabled=got||S.tokens<p.cost;
+    b.innerHTML=`<span class="name">${esc(p.name)}</span><span class="desc">${esc(p.desc)}</span><span class="cost">${got?"Acquis":p.cost+" ligne(s) de CV"}</span>`;
+    b.addEventListener("click",()=>{ if(!got&&S.tokens>=p.cost){ S.tokens-=p.cost; S.perks.push(p.id); M=mods(); fillQuests(); toast("Compétence acquise : "+p.name); renderAll(true); } });
+    el.appendChild(b);
+  });
+}
+
+/* ---------- Stats & achievements ---------- */
+function rankName(){ let n=RANKS[0][1]; RANKS.forEach(([v,t])=>{ if(S.allTime>=v) n=t; }); return n; }
+function checkAch(){
+  let any=false;
+  ACH.forEach(([n,f])=>{ if(!S.ach.includes(n)&&f(S)){ S.ach.push(n); toast("Trophée : "+n); any=true; } });
+  if(any) M=mods();
+}
+function renderStats(){
+  const t=Math.floor(S.played), h=Math.floor(t/3600), m=Math.floor(t%3600/60);
+  $("stats").innerHTML=[["Dans ce poste",fmt(S.total)],["Toute la carrière",fmt(S.allTime)],["Record /s",fmt(S.bestRate)],["Clics",fmt(S.clicks)],
+    ["Expérience",S.xp+" XP (+"+(S.xp*5)+" %)"],["Démissions",S.resets],["Objectifs remplis",S.questsDone],["Surprises attrapées",S.goldens],
+    ["Meilleur combo",S.maxCombo],["Temps « travaillé »",h+" h "+String(m).padStart(2,"0")]].map(([a,b])=>`<div>${a}<b>${b}</b></div>`).join("");
+  $("achCount").textContent=S.ach.length+" / "+ACH.length+" débloqués.";
+  $("ach").innerHTML=ACH.map(([n])=>`<span class="${S.ach.includes(n)?"got":""}">${esc(n)}</span>`).join("");
+}
+
+/* ---------- Golden surprises ---------- */
+function spawnGolden(){
+  const dur=has("charm")?2:1;
+  const kinds=[
+    [4,"Mail du DG : « Bravo à tous »",()=>{ buffs.push({name:"Motivation ×7",kind:"prod",mult:7,until:Date.now()+30000*dur}); }],
+    [4,"Prime exceptionnelle !",()=>{ const v=Math.max(rate()*900,S.tasks*0.15,50); gain(v); toast("Prime : +"+fmt(v)); }],
+    [3,"Café offert par le boss",()=>{ buffs.push({name:"Clics ×77",kind:"click",mult:77,until:Date.now()+13000*dur}); }],
+    [2,"Soldes chez le cabinet de recrutement",()=>{ buffs.push({name:"Recrutements −50 %",kind:"cost",mult:0.5,until:Date.now()+20000*dur}); }],
+    [1,"Fusion-acquisition éclair",()=>{ buffs.push({name:"Frénésie ×77",kind:"prod",mult:77,until:Date.now()+8000*dur}); }],
+    [1,"Panne du VPN (clique quand même)",()=>{ buffs.push({name:"Panne VPN ×0,5",kind:"prod",mult:0.5,until:Date.now()+15000}); toast("Aïe, le VPN est tombé. Ça repart dans 15 s.");},true]
+  ];
+  let tot=kinds.reduce((a,k)=>a+k[0],0), r=Math.random()*tot, pick=kinds[0];
+  for(const k of kinds){ r-=k[0]; if(r<=0){ pick=k; break; } }
+  const g=document.createElement("button"); g.className="golden"+(pick[3]?" bad":""); g.textContent=pick[1];
+  g.style.left=Math.max(16,Math.random()*(innerWidth-260))+"px"; g.style.top=(80+Math.random()*Math.max(60,innerHeight-200))+"px";
+  g.addEventListener("click",()=>{ pick[2](); S.goldens++; g.remove(); renderAll(); });
+  document.body.appendChild(g); setTimeout(()=>g.remove(),10000);
+}
+(function sched(){ const base=has("gold")?25000:50000; setTimeout(()=>{ if(!document.hidden && $("boss").hidden) spawnGolden(); sched(); }, base+Math.random()*base*1.4); })();
+
+/* ---------- Ticker ---------- */
+let ni=Math.floor(Math.random()*NEWS.length);
+function news(){ $("ticker").innerHTML=NEWS[ni++%NEWS.length]; }
+news(); setInterval(news,9000);
+
+/* ---------- Tabs & render ---------- */
+let tab="hire";
+$("tabs").addEventListener("click",e=>{ const t=e.target.closest(".tab"); if(!t) return; tab=t.dataset.tab;
+  $("tabs").querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===t));
+  ["hire","upg","quest","cv","board","stats"].forEach(k=>$("v-"+k).hidden=k!==tab);
+  renderAll(true); });
+function renderTop(){
+  const r=rate();
+  $("count").textContent=fmt(S.tasks); $("rate").textContent=fmt(r); $("clickval").textContent=fmt(clickVal()/comboMult()*comboMult());
+  $("rank").textContent=rankName();
+  const cm=comboMult(); $("comboTxt").textContent="×"+cm.toFixed(2).replace(".",","); $("comboBar").style.width=(Math.min(combo,50)*2)+"%";
+  const now=Date.now(); buffs=buffs.filter(b=>b.until>now);
+  $("buffs").innerHTML=buffs.map(b=>`<span>${esc(b.name)} · ${Math.ceil((b.until-now)/1000)} s</span>`).join("");
+  document.title=fmt(S.tasks)+" tâches · Open Space Tycoon";
+}
+function renderTabsBadges(){
+  const nu=availUpg().filter(u=>S.tasks>=u.cost).length, nq=readyQuests();
+  const T=$("tabs").children;
+  T[1].textContent="Améliorations"+(nu?" ("+nu+")":""); T[2].textContent="Objectifs"+(nq?" ("+nq+")":"");
+}
+function renderAll(force){
+  renderTop(); renderTabsBadges();
+  if(tab==="hire") renderHires();
+  if(tab==="upg") renderUpg(force);
+  if(tab==="quest") renderQuests(force);
+  if(tab==="cv" && force) renderCV();
+  if(tab==="stats") renderStats();
+  if(tab==="board" && force) renderBoard();
+}
+
+/* ---------- Boss key ---------- */
+function buildBoss(){
+  const cols="ABCDEFGHIJ".split(""), rows=["Poste","Infra serveurs","Licences","Prestations","Déplacements","Formation","Fournitures","Sous-traitance","Maintenance","Provision risques","Divers","Total"];
+  let h="<tr><th></th>"+cols.map(c=>"<th>"+c+"</th>").join("")+"</tr>";
+  h+="<tr><th>1</th><td><b>Poste</b></td>"+["Oct","Nov","Déc","T4","Budget","Écart","%","Resp.","Statut"].map(x=>"<td><b>"+x+"</b></td>").join("")+"</tr>";
+  for(let i=1;i<rows.length;i++){
+    const a=[0,0,0].map(()=>Math.round(2000+Math.random()*18000)), t=a[0]+a[1]+a[2], b=Math.round(t*(0.9+Math.random()*0.2));
+    h+=`<tr><th>${i+1}</th><td>${rows[i]}</td>${a.map(x=>"<td style='text-align:right'>"+x.toLocaleString("fr-FR")+" €</td>").join("")}<td style='text-align:right'>${t.toLocaleString("fr-FR")} €</td><td style='text-align:right'>${b.toLocaleString("fr-FR")} €</td><td style='text-align:right'>${(t-b).toLocaleString("fr-FR")} €</td><td>${((t-b)/b*100).toFixed(1).replace(".",",")} %</td><td>${["AD","JD","NC","RP","YC"][i%5]}</td><td>${["Validé","En revue","À arbitrer"][i%3]}</td></tr>`;
+  }
+  for(let i=rows.length+1;i<40;i++) h+="<tr><th>"+i+"</th>"+cols.map(()=>"<td></td>").join("")+"</tr>";
+  $("bossTable").innerHTML=h;
+}
+function toggleBoss(){ const b=$("boss"); b.hidden=!b.hidden; if(!b.hidden){ buildBoss(); S.bossOpens++; document.title="Budget_Previsionnel_T4.xlsx"; } else renderAll(true); }
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") toggleBoss(); });
+$("boss").addEventListener("dblclick",toggleBoss);
+
+/* ---------- Save: local + Supabase + leaderboard ---------- */
+const CFG = window.OST_CONFIG || {};
+let sb=null, uid=null, authUser=null, saving=false, lastCloud=0, boardRows=null, boardBusy=false;
+function saveLocal(){ S.last=Date.now(); S.savedAt=Date.now(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function pseudo(){ return (S.pseudo||"").trim().slice(0,24) || "Collègue anonyme"; }
+async function saveCloud(){
+  if(!sb||!uid||saving) return; saving=true;
+  try{
+    S.savedAt=Date.now();
+    const {error}=await sb.from("saves").upsert({user_id:uid,state:S,saved_at:new Date(S.savedAt).toISOString()});
+    if(error) console.warn("Sauvegarde Supabase :",error.message); else lastCloud=Date.now();
+  }catch(e){ console.warn(e); }
+  saving=false;
+}
+async function saveBoard(){
+  if(!sb||!uid||boardBusy) return; boardBusy=true;
+  try{
+    const {error}=await sb.from("leaderboard").upsert({user_id:uid,pseudo:pseudo(),all_time:S.allTime,xp:S.xp,rank:rankName(),updated_at:new Date().toISOString()});
+    if(error) console.warn("Classement Supabase :",error.message);
+  }catch(e){ console.warn(e); }
+  boardBusy=false;
+}
+function saveAll(now){ saveLocal(); if(now||Date.now()-lastCloud>30000){ saveCloud(); saveBoard(); } }
+function setCloud(t,on){ $("cloud").textContent=t; $("cloud").classList.toggle("on",!!on); }
+setInterval(()=>{ if(uid&&lastCloud){ const s=Math.round((Date.now()-lastCloud)/1000); setCloud("Sauvegarde cloud · il y a "+s+" s",true); } },5000);
+
+async function initCloud(){
+  $("pseudo").value=S.pseudo||"";
+  if(!CFG.url||!CFG.anonKey||!window.supabase){ renderAccount(); return; }
+  sb=window.supabase.createClient(CFG.url,CFG.anonKey);
+  let {data:{session}}=await sb.auth.getSession();
+  if(!session){
+    const r=await sb.auth.signInAnonymously();
+    if(r.error) console.warn("Connexion anonyme refusée :",r.error.message);
+    session=r.data&&r.data.session;
+  }
+  sb.auth.onAuthStateChange((ev,s)=>{
+    authUser=s?s.user:null;
+    if(authUser && authUser.id!==uid){ uid=authUser.id; loadCloud(); }
+    if(!authUser){ uid=null; setCloud("Sauvegarde locale"); }
+    renderAccount();
+  });
+  if(session){ authUser=session.user; uid=authUser.id; await loadCloud(); }
+  renderAccount(); refreshBoard(); setInterval(refreshBoard,60000);
+}
+async function loadCloud(){
+  try{
+    const {data}=await sb.from("saves").select("state").eq("user_id",uid).maybeSingle();
+    if(data&&data.state&&(data.state.savedAt||0)>(S.savedAt||0)+2000){
+      const keepPseudo=S.pseudo; S=normalize(data.state); if(!S.pseudo) S.pseudo=keepPseudo;
+      M=mods(); fillQuests(); applyOffline(); $("pseudo").value=S.pseudo||""; toast("Partie reprise depuis le cloud"); renderAll(true);
+    }
+  }catch(e){ console.warn(e); }
+  setCloud("Sauvegarde cloud active",true); saveCloud(); saveBoard();
+}
+async function refreshBoard(){
+  if(!sb) return;
+  const {data,error}=await sb.from("leaderboard").select("user_id,pseudo,all_time,xp,rank").order("all_time",{ascending:false}).limit(25);
+  boardRows=error?null:data; if(tab==="board") renderBoard();
+}
+function renderBoard(){
+  const box=$("boardBox");
+  if(!sb){ box.innerHTML='<p class="empty">Classement désactivé : Supabase n\'est pas configuré (voir le README).</p>'; return; }
+  if(!boardRows){ box.innerHTML='<p class="empty">Impossible de charger le classement pour le moment.</p>'; return; }
+  if(!boardRows.length){ box.innerHTML='<p class="empty">Personne au classement pour l\'instant.</p>'; return; }
+  const tbl=document.createElement("table"); tbl.className="board";
+  tbl.innerHTML="<thead><tr><th>#</th><th>Collègue</th><th>Titre</th><th style='text-align:right'>Carrière</th><th style='text-align:right'>XP</th></tr></thead>";
+  const tb=document.createElement("tbody");
+  boardRows.forEach((r,i)=>{
+    const tr=document.createElement("tr"); if(r.user_id===uid) tr.className="me";
+    [String(i+1),r.pseudo||"Collègue anonyme",r.rank||"",fmt(+r.all_time||0),String(r.xp||0)].forEach((c,j)=>{
+      const td=document.createElement("td"); td.textContent=c; if(j>=3) td.className="num"; tr.appendChild(td); });
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb); box.innerHTML=""; box.appendChild(tbl);
+}
+function renderAccount(){
+  const st=$("acctStatus"), signed=authUser&&!authUser.is_anonymous;
+  $("emailRow").hidden=!sb||signed; $("logout").hidden=!signed;
+  if(!sb) st.textContent="Supabase n'est pas configuré : la partie reste sur cet appareil.";
+  else if(!authUser) st.textContent="Non connecté. Active la connexion anonyme dans Supabase, ou connecte-toi par email.";
+  else if(signed) st.textContent="Connecté avec "+(authUser.email||"ton compte")+". Ta partie te suit sur tous tes appareils.";
+  else st.textContent="Session invitée sur cet appareil. Ajoute ton email pour retrouver ta partie ailleurs.";
+}
+$("pseudoSave").addEventListener("click",()=>{ S.pseudo=$("pseudo").value.trim().slice(0,24); saveAll(true); toast("Pseudo enregistré"); setTimeout(refreshBoard,800); });
+$("magic").addEventListener("click",async()=>{
+  const email=$("email").value.trim(); if(!sb||!email) return;
+  const redirect=location.origin+location.pathname;
+  let res;
+  if(authUser&&authUser.is_anonymous){
+    res=await sb.auth.updateUser({email},{emailRedirectTo:redirect});
+    if(!res.error){ toast("Email envoyé. Clique sur le lien pour lier ta partie à ce compte."); return; }
+  }
+  res=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:redirect}});
+  toast(res.error?"Envoi impossible : "+res.error.message:"Lien de connexion envoyé à "+email);
+});
+$("logout").addEventListener("click",async()=>{ saveAll(true); await sb.auth.signOut(); toast("Déconnecté"); });
+
+/* export / import */
+$("exportBtn").addEventListener("click",()=>{
+  const code=btoa(unescape(encodeURIComponent(JSON.stringify(S)))); const ta=$("saveCode"); ta.value=code;
+  const p=navigator.clipboard&&navigator.clipboard.writeText(code);
+  if(p) p.then(()=>toast("Code copié"),()=>{ ta.select(); toast("Code affiché, copie-le à la main"); }); else { ta.select(); toast("Code affiché, copie-le à la main"); }
+});
+$("importBtn").addEventListener("click",()=>{
+  try{ const d=JSON.parse(decodeURIComponent(escape(atob($("saveCode").value.trim())))); S=normalize(d); M=mods(); fillQuests(); saveAll(true); toast("Partie chargée"); renderAll(true); }
+  catch(e){ toast("Ce code n'est pas valide. Vérifie qu'il est complet."); }
+});
+$("saveNow").addEventListener("click",()=>{ saveAll(true); toast("Sauvegardé"); });
+$("reset").addEventListener("click",()=>{ $("resetYes").hidden=false; });
+$("resetYes").addEventListener("click",()=>{ S=fresh(); M=mods(); fillQuests(); $("resetYes").hidden=true; saveAll(true); renderAll(true); });
+
+/* ---------- Loop ---------- */
+function applyOffline(){
+  const cap=has("tele")?12*3600:8*3600, away=Math.min((Date.now()-(S.last||Date.now()))/1000,cap);
+  if(away>60){ const v=rate()*away*(has("tele")?1:0.5); if(v>0){ gain(v); setTimeout(()=>toast("Pendant ton absence, l'équipe a bouclé "+fmt(v)+" tâches"),600); } }
+  S.last=Date.now();
+}
+applyOffline(); fillQuests();
+let prev=performance.now(), acc=0, autoAcc=0;
+setInterval(()=>{
+  const now=performance.now(), dt=Math.min((now-prev)/1000,5); prev=now;
+  const r=rate(); gain(r*dt); S.played+=dt; S.bestRate=Math.max(S.bestRate,r);
+  if(has("auto")){ autoAcc+=dt*5; while(autoAcc>=1){ autoAcc--; doClick(null,null,true); } }
+  if(Date.now()-lastClick>1200 && combo>0) combo=Math.max(0,combo-1);
+  acc+=dt; if(acc>=1){ acc=0; checkAch(); }
+  if(!$("boss").hidden) return;
+  renderAll(false);
+},100);
+setInterval(()=>saveAll(false),5000);
+addEventListener("visibilitychange",()=>{ if(document.hidden) saveAll(true); });
+addEventListener("pagehide",()=>saveLocal());
+renderAll(true);
+initCloud();
+})();
+</script>
+</body>
+</html>
