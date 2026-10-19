@@ -182,6 +182,11 @@ h3{font:650 13px var(--ui);text-transform:uppercase;letter-spacing:.07em;color:v
 .row .owned{grid-column:3;grid-row:1/4;font:700 28px/1 var(--display);text-align:right;min-width:2ch;font-variant-numeric:tabular-nums}
 .row .cost{font:600 12px var(--mono);color:var(--brand)}
 .row .cost.c2{color:var(--ink-3)}
+.row .yield{grid-column:2;display:flex;align-items:center;gap:10px;margin-top:6px;font-size:12px;color:var(--ink-2)}
+.row .yield b{color:var(--ok);font-family:var(--mono);font-weight:600}
+.row .ybar{flex:1 1 60px;max-width:180px;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.row .ybar i{display:block;height:100%;width:0;border-radius:99px;background:var(--ok)}
+@media (max-width:520px){.row .ybar{display:none}}
 .row:hover:not([disabled]){border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
 .row:active:not([disabled]){transform:scale(.995)}
 .row[disabled]{cursor:not-allowed}
@@ -847,7 +852,7 @@ H.forEach((h,i)=>{
   const b=document.createElement("button"); b.className="row"; b.id="h-"+h.id;
   b.dataset.ini=h.name.split(/[\s«»'’-]+/).filter(w=>w.length>2).slice(0,2).map(w=>w[0].toUpperCase()).join("");
   b.style.setProperty("--ico",ICO[i%ICO.length]);
-  b.innerHTML=`<div class="name">${h.name}</div><div class="owned"></div><div class="desc">${h.desc}</div><div class="meta"><span class="cost c1"></span><span class="cost c2" style="color:var(--ink-soft)"></span></div>`;
+  b.innerHTML=`<div class="name">${h.name}</div><div class="owned"></div><div class="desc">${h.desc}</div><div class="meta"><span class="cost c1"></span><span class="cost c2"></span></div><div class="yield"><span class="ytxt"></span><span class="ybar"><i></i></span></div>`;
   b.addEventListener("click",()=>{
     const n = buyN==="max" ? maxAfford(h) : buyN; if(n<1) return;
     const c=costN(h,n); if(S.tasks>=c){ S.tasks-=c; S.owned[h.id]+=n; TD().hires+=n; renderAll(true); }
@@ -855,6 +860,7 @@ H.forEach((h,i)=>{
   $("hireList").appendChild(b);
 });
 function renderHires(){
+  const allRate=rate();
   let prevVisible=true;
   H.forEach((h,i)=>{
     const b=$("h-"+h.id);
@@ -864,7 +870,11 @@ function renderHires(){
     b.disabled = S.tasks<c;
     b.querySelector(".owned").textContent=S.owned[h.id];
     b.querySelector(".c1").textContent=(n>1?"×"+n+" : ":"Coût : ")+fmt(c);
-    b.querySelector(".c2").textContent="+"+fmt(prodOf(h))+"/s chacun";
+    const each=prodOf(h)*buffMult("prod")*(WD.prod||1), tot=each*S.owned[h.id], share=allRate>0?tot/allRate*100:0;
+    b.querySelector(".c2").textContent="+"+fmt(each)+"/s chacun";
+    const y=b.querySelector(".yield"); y.hidden=!S.owned[h.id];
+    if(S.owned[h.id]){ b.querySelector(".ytxt").innerHTML="Rapporte <b>"+fmt(tot)+"/s</b> · "+(share>=10?Math.round(share):share.toFixed(1).replace(".",","))+" % de ta production";
+      b.querySelector(".ybar i").style.width=Math.min(100,share)+"%"; }
   });
 }
 
@@ -1371,7 +1381,7 @@ tickClock(); setInterval(tickClock,10000);
 
 /* ---------- Save: local + Supabase + leaderboard ---------- */
 const CFG = window.OST_CONFIG || {};
-let sb=null, uid=null, authUser=null, saving=false, lastCloud=0, boardRows=null, boardBusy=false, cloudErr="", cloudTimer=0;
+let authErr="", sb=null, uid=null, authUser=null, saving=false, lastCloud=0, boardRows=null, boardBusy=false, cloudErr="", cloudTimer=0;
 function cloudSoon(){ if(!sb||!uid) return; clearTimeout(cloudTimer); cloudTimer=setTimeout(()=>{ saveLocal(); saveCloud(); saveBoard(); },1500); }
 function saveLocal(){ S.last=Date.now(); S.savedAt=Date.now(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 function pseudo(){ return (S.pseudo||"").trim().slice(0,24) || "Collègue anonyme"; }
@@ -1408,13 +1418,15 @@ async function initCloud(){
   let {data:{session}}=await sb.auth.getSession();
   if(!session){
     const r=await sb.auth.signInAnonymously();
-    if(r.error){ console.warn("Connexion anonyme refusée :",r.error.message); setCloud("Supabase : active « Anonymous sign-ins » dans Authentication"); }
+    if(r.error){ authErr=r.error.message; console.warn("Connexion anonyme refusée :",r.error.message);
+      setCloud(/anonymous/i.test(r.error.message)?"Supabase : connexion anonyme désactivée (Authentication > Sign In / Providers)":/signup|sign up/i.test(r.error.message)?"Supabase : inscriptions désactivées (Allow new users to sign up)":/captcha/i.test(r.error.message)?"Supabase : désactive le captcha (Attack Protection)":"Supabase : connexion refusée ("+r.error.message+")");
+      $("cloud").title=r.error.message; }
     session=r.data&&r.data.session;
   }
   sb.auth.onAuthStateChange((ev,s)=>{
     authUser=s?s.user:null;
     if(authUser && authUser.id!==uid){ uid=authUser.id; loadCloud(); }
-    if(!authUser){ uid=null; setCloud("Non connecté à Supabase, sauvegarde locale"); }
+    if(!authUser){ uid=null; if(!authErr) setCloud("Non connecté à Supabase, sauvegarde locale"); }
     renderAccount();
   });
   if(session){ authUser=session.user; uid=authUser.id; await loadCloud(); }
