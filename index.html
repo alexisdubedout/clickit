@@ -10,8 +10,8 @@
    La clé anon est faite pour être publique : la sécurité repose sur les règles RLS de supabase.sql.
    Laisse vide pour jouer en local uniquement. */
 window.OST_CONFIG = {
-  url: "",      // ex. "https://abcdefgh.supabase.co"
-  anonKey: ""   // ex. "eyJhbGciOi..."
+  url: "https://lproewprovovudgbllvx.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxwcm9ld3Byb3ZvdnVkZ2JsbHZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNTI2ODIsImV4cCI6MjEwNzcyODY4Mn0.2kALSs5uZ7vOtk86fsffHnvB0GRBwbzs_PcBN95Sov8"
 };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -1334,6 +1334,7 @@ function renderTabsBadges(){
   $("tabs").querySelectorAll(".tab").forEach(b=>{ const k=b.dataset.tab, v=n[k]; const txt=TABN[k]+(v?" ("+v+")":""); if(b.textContent!==txt) b.textContent=txt; });
 }
 function renderAll(force){
+  if(force) cloudSoon();
   renderTop(); renderTabsBadges();
   if(tab==="hire") renderHires();
   if(tab==="upg") renderUpg(force);
@@ -1370,7 +1371,8 @@ tickClock(); setInterval(tickClock,10000);
 
 /* ---------- Save: local + Supabase + leaderboard ---------- */
 const CFG = window.OST_CONFIG || {};
-let sb=null, uid=null, authUser=null, saving=false, lastCloud=0, boardRows=null, boardBusy=false;
+let sb=null, uid=null, authUser=null, saving=false, lastCloud=0, boardRows=null, boardBusy=false, cloudErr="", cloudTimer=0;
+function cloudSoon(){ if(!sb||!uid) return; clearTimeout(cloudTimer); cloudTimer=setTimeout(()=>{ saveLocal(); saveCloud(); saveBoard(); },1500); }
 function saveLocal(){ S.last=Date.now(); S.savedAt=Date.now(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 function pseudo(){ return (S.pseudo||"").trim().slice(0,24) || "Collègue anonyme"; }
 async function saveCloud(){
@@ -1378,8 +1380,10 @@ async function saveCloud(){
   try{
     S.savedAt=Date.now();
     const {error}=await sb.from("saves").upsert({user_id:uid,state:S,saved_at:new Date(S.savedAt).toISOString()});
-    if(error) console.warn("Sauvegarde Supabase :",error.message); else lastCloud=Date.now();
-  }catch(e){ console.warn(e); }
+    if(error){ cloudErr=error.message; console.warn("Sauvegarde Supabase :",error.message);
+      setCloud(/relation|does not exist|schema cache/i.test(error.message)?"Supabase : table « saves » introuvable, exécute supabase.sql":/row-level|policy/i.test(error.message)?"Supabase : règles RLS manquantes, exécute supabase.sql":"Supabase : échec de la sauvegarde ("+error.message+")"); }
+    else { lastCloud=Date.now(); cloudErr=""; }
+  }catch(e){ cloudErr=String(e); console.warn(e); setCloud("Supabase injoignable, sauvegarde locale en attendant"); }
   saving=false;
 }
 async function saveBoard(){
@@ -1390,24 +1394,27 @@ async function saveBoard(){
   }catch(e){ console.warn(e); }
   boardBusy=false;
 }
-function saveAll(now){ saveLocal(); if(now||Date.now()-lastCloud>30000){ saveCloud(); saveBoard(); } }
+function saveAll(now){ saveLocal(); if(now||Date.now()-lastCloud>10000){ saveCloud(); if(now||Date.now()-lastBoard>30000){ lastBoard=Date.now(); saveBoard(); } } }
+let lastBoard=0;
 function setCloud(t,on){ $("cloud").textContent=t; $("cloud").classList.toggle("on",!!on); }
-setInterval(()=>{ if(uid&&lastCloud){ const s=Math.round((Date.now()-lastCloud)/1000); setCloud("Sauvegarde cloud · il y a "+s+" s",true); } },5000);
+setInterval(()=>{ if(uid&&lastCloud&&!cloudErr){ const s=Math.round((Date.now()-lastCloud)/1000); setCloud("Sauvegarde cloud · il y a "+s+" s",true); } },5000);
 
 async function initCloud(){
   $("pseudo").value=S.pseudo||"";
-  if(!CFG.url||!CFG.anonKey||!window.supabase){ renderAccount(); return; }
+  if(!CFG.url||!CFG.anonKey){ setCloud("Supabase non configuré"); renderAccount(); return; }
+  if(!window.supabase){ setCloud("Bibliothèque Supabase non chargée (réseau ?)"); renderAccount(); return; }
+  setCloud("Connexion à Supabase…");
   sb=window.supabase.createClient(CFG.url,CFG.anonKey);
   let {data:{session}}=await sb.auth.getSession();
   if(!session){
     const r=await sb.auth.signInAnonymously();
-    if(r.error) console.warn("Connexion anonyme refusée :",r.error.message);
+    if(r.error){ console.warn("Connexion anonyme refusée :",r.error.message); setCloud("Supabase : active « Anonymous sign-ins » dans Authentication"); }
     session=r.data&&r.data.session;
   }
   sb.auth.onAuthStateChange((ev,s)=>{
     authUser=s?s.user:null;
     if(authUser && authUser.id!==uid){ uid=authUser.id; loadCloud(); }
-    if(!authUser){ uid=null; setCloud("Sauvegarde locale"); }
+    if(!authUser){ uid=null; setCloud("Non connecté à Supabase, sauvegarde locale"); }
     renderAccount();
   });
   if(session){ authUser=session.user; uid=authUser.id; await loadCloud(); }
@@ -1421,7 +1428,7 @@ async function loadCloud(){
       M=mods(); fillQuests(); applyOffline(); $("pseudo").value=S.pseudo||""; toast("Partie reprise depuis le cloud"); renderAll(true);
     }
   }catch(e){ console.warn(e); }
-  setCloud("Sauvegarde cloud active",true); saveCloud(); saveBoard();
+  await saveCloud(); saveBoard(); if(!cloudErr) setCloud("Sauvegarde cloud active",true);
 }
 async function refreshBoard(){
   if(!sb) return;
