@@ -10,135 +10,289 @@
    La clé anon est faite pour être publique : la sécurité repose sur les règles RLS de supabase.sql.
    Laisse vide pour jouer en local uniquement. */
 window.OST_CONFIG = {
-  url: "https://lproewprovovudgbllvx.supabase.co",      // ex. "https://abcdefgh.supabase.co"
-  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxwcm9ld3Byb3ZvdnVkZ2JsbHZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNTI2ODIsImV4cCI6MjEwNzcyODY4Mn0.2kALSs5uZ7vOtk86fsffHnvB0GRBwbzs_PcBN95Sov8"   // ex. "eyJhbGciOi..."
+  url: "",      // ex. "https://abcdefgh.supabase.co"
+  anonKey: ""   // ex. "eyJhbGciOi..."
 };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
-body{margin:0}
-[hidden]{display:none!important}
-/* Layout: a graph-paper notebook page. Post-it counter and red stamp on the left, tabbed ledger on the right. Deliberately single light theme. */
+/* Layout: a modern work-management app. Left nav rail, main workspace, right "focus" column holding the counter and the big Valider button. Signal yellow is the single bold accent; cobalt carries progress. */
 :root{
-  color-scheme: light;
-  --paper:#fbfcfa; --grid:#dfe8ee; --ink:#1d2b4f; --ink-soft:#5a6787;
-  --postit:#ffe066; --postit-edge:#f2c94c; --pink:#ffc2d4; --pen:#2348c9; --red:#d13a3a; --ok:#2e8b57;
-  --display:"Kalam", "Comic Sans MS", cursive;
-  --body:"Work Sans", system-ui, sans-serif;
-  --mono:"IBM Plex Mono", ui-monospace, monospace;
+  --bg:#eceef2; --surface:#ffffff; --surface-2:#f5f6f8; --line:#e1e4ea; --line-2:#cfd4dc;
+  --ink:#14161c; --ink-2:#565d6b; --ink-3:#8a909c;
+  --accent:#ffd400; --accent-ink:#1c1800; --accent-soft:#fff5c4;
+  --brand:#2450d6; --brand-soft:#e6ecfd; --ok:#12805c; --ok-soft:#e2f4ec; --bad:#cf3a3a; --bad-soft:#fde9e9;
+  --r0:#7a808c; --r1:#2f6fe0; --r2:#8b3fd9; --r3:#d69a00;
+  --shadow:0 1px 2px rgba(20,22,28,.06),0 4px 14px rgba(20,22,28,.06);
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --ui:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --rad:14px; --rad-s:9px;
+  /* aliases used by generated markup */
+  --navy:var(--brand); --white:var(--surface); --red:var(--bad); --tip:var(--accent-soft); --lo:var(--ink-3); --face:var(--surface-2); --face-lt:var(--surface-2); --hi:var(--line); --dk:var(--line-2); --pen:var(--brand);
+  color-scheme:light;
 }
-html,body{height:100%}
-body{background:var(--paper);
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:22px 22px;color:var(--ink);font-family:var(--body);font-size:15px}
-.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr);gap:28px}
-@media (max-width:820px){.wrap{grid-template-columns:1fr}}
-header{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px}
-h1{font-family:var(--display);font-size:2.4rem;margin:0;line-height:1;text-wrap:balance;color:var(--pen)}
-h1 small{font-size:1rem;color:var(--ink-soft);font-family:var(--body);margin-left:6px}
-.hint{font-size:.85rem;color:var(--ink-soft);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-kbd{font-family:var(--mono);border:1px solid var(--ink-soft);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:.8rem;background:var(--paper)}
-.cloud{font-family:var(--mono);font-size:.75rem;border:1.5px solid var(--ink-soft);border-radius:999px;padding:2px 9px;background:var(--paper)}
-.cloud.on{border-color:var(--ok);color:var(--ok)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d0f13; --surface:#161920; --surface-2:#1d2129; --line:#272c35; --line-2:#363c47;
+  --ink:#eef0f4; --ink-2:#a7aebb; --ink-3:#767d8b;
+  --accent:#ffd60a; --accent-ink:#1c1800; --accent-soft:#3a3311;
+  --brand:#7598ff; --brand-soft:#1d2744; --ok:#3cc48f; --ok-soft:#14302a; --bad:#ff6b6b; --bad-soft:#3a1c1f;
+  --r0:#8d94a1; --r1:#5b8fff; --r2:#b07bff; --r3:#ffc233;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0f13; --surface:#161920; --surface-2:#1d2129; --line:#272c35; --line-2:#363c47;
+  --ink:#eef0f4; --ink-2:#a7aebb; --ink-3:#767d8b;
+  --accent:#ffd60a; --accent-ink:#1c1800; --accent-soft:#3a3311;
+  --brand:#7598ff; --brand-soft:#1d2744; --ok:#3cc48f; --ok-soft:#14302a; --bad:#ff6b6b; --bad-soft:#3a1c1f;
+  --r0:#8d94a1; --r1:#5b8fff; --r2:#b07bff; --r3:#ffc233;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--ui);-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+button{font-family:inherit;color:inherit}
+p{margin:0}
+b{font-weight:650}
+kbd{font:600 11px var(--mono);padding:1px 6px;border-radius:5px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2)}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 
-.left{display:flex;flex-direction:column;gap:20px;align-items:center;min-width:0}
-.postit{background:var(--postit);width:100%;max-width:380px;padding:16px 20px 20px;transform:rotate(-1.5deg);
-  box-shadow:0 10px 18px -10px rgba(29,43,79,.45);border-bottom:3px solid var(--postit-edge)}
-.postit .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft)}
-.title{font-family:var(--display);font-size:1.15rem;color:var(--pen);margin-bottom:2px}
-.count{font-family:var(--display);font-weight:700;font-size:2.7rem;line-height:1.05;font-variant-numeric:tabular-nums;word-break:break-all}
-.rate{font-family:var(--mono);font-size:.85rem}
-.buffs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.buffs span{background:var(--paper);border:1.5px solid var(--pen);color:var(--pen);font-size:.75rem;font-weight:600;padding:2px 7px;border-radius:4px}
-.stamp{position:relative;width:min(230px,66vw);aspect-ratio:1;max-width:100%;border-radius:50%;border:none;cursor:pointer;
-  background:radial-gradient(circle at 35% 30%,#ff7b7b,var(--red) 60%,#9c2525);color:#fff;
-  font-family:var(--display);font-size:1.6rem;font-weight:700;line-height:1.1;
-  box-shadow:0 10px 0 #7d1d1d,0 18px 24px -8px rgba(0,0,0,.4);transition:transform .06s,box-shadow .06s;user-select:none;-webkit-tap-highlight-color:transparent}
-.stamp:active{transform:translateY(8px);box-shadow:0 2px 0 #7d1d1d,0 6px 10px -4px rgba(0,0,0,.4)}
-.stamp:focus-visible{outline:3px dashed var(--pen);outline-offset:8px}
-.stamp span{display:block;font-size:.8rem;font-family:var(--mono);font-weight:500;opacity:.9;margin-top:6px}
-.combo{width:100%;max-width:260px;font-size:.8rem;display:grid;gap:4px}
-.combo .bar{height:8px;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden;background:var(--paper)}
-.combo .bar i{display:block;height:100%;width:0;background:var(--red);transition:width .1s}
-.float{position:fixed;pointer-events:none;font-family:var(--display);font-weight:700;color:var(--pen);font-size:1.3rem;animation:up .9s ease-out forwards;z-index:30}
-.float.crit{color:var(--red);font-size:1.9rem}
+/* announce bar */
+.announce{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;background:#14161c;color:#eef0f4;font-size:13px;
+  padding-block:7px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.announce .pill{flex:none;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
+.ticker{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticker b{color:#ffd400;font-weight:600}
+.cloud{flex:none;font-size:12px;opacity:.8;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cloud::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ink-3);margin-right:6px;vertical-align:1px}
+.cloud.on::before{background:#3cc48f}
+.clock{flex:none;font:600 12px var(--mono);opacity:.8}
+@media (max-width:640px){.cloud{display:none}}
+
+/* app grid */
+.app{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) 360px;gap:20px;align-items:start;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.nav,.focus{position:sticky;top:56px;min-width:0}
+.focus{display:flex;flex-direction:column;gap:14px;min-width:0}
+.main{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow);padding:22px}
+@media (max-width:1180px){.app{grid-template-columns:minmax(0,1fr) 340px}.nav{grid-column:1/-1;position:static}}
+@media (max-width:820px){.agenda .ag.info{display:none}.app{grid-template-columns:1fr;gap:14px}.focus{position:static;order:-1}.nav{order:0}.main{padding:16px}}
+
+/* nav */
+.brand{display:flex;align-items:center;gap:10px;padding:2px 6px 16px}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:800 15px var(--display);flex:none}
+.brand b{display:block;font:700 17px/1.1 var(--display)}
+.brand small{color:var(--ink-3);font-size:12px}
+.tabs{display:flex;flex-direction:column;gap:2px}
+.tab{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:transparent;border-radius:var(--rad-s);padding:8px 10px;font:500 14px var(--ui);color:var(--ink-2);cursor:pointer}
+.tab::before{content:"";width:18px;height:18px;flex:none;background:currentColor;opacity:.75;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.tab:hover{background:var(--surface);color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:650;box-shadow:var(--shadow)}
+.tab[aria-selected="true"]::before{opacity:1;color:var(--brand)}
+.discreet{margin-top:16px;width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px dashed var(--line-2);background:transparent;border-radius:var(--rad-s);padding:9px 10px;font:500 13px var(--ui);color:var(--ink-2);cursor:pointer}
+.discreet:hover{border-color:var(--ink-3);color:var(--ink)}
+@media (max-width:1180px){
+  .brand{display:none}.discreet{display:none}
+  .tabs{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px;scrollbar-width:thin}
+  .tab{width:auto;flex:none;white-space:nowrap;background:var(--surface);border:1px solid var(--line);padding:7px 12px}
+  .tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);box-shadow:none}
+  .tab[aria-selected="true"]::before{color:var(--accent)}
+}
+.tab[data-tab="hire"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='9' cy='8' r='4'/%3E%3Cpath d='M2 21c0-4 3-6 7-6s7 2 7 6M19 8v6M16 11h6'/%3E%3C/svg%3E")}
+.tab[data-tab="upg"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5M5 12l7-7 7 7'/%3E%3C/svg%3E")}
+.tab[data-tab="quest"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='5'/%3E%3Ccircle cx='12' cy='12' r='1.5'/%3E%3C/svg%3E")}
+.tab[data-tab="proj"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Crect x='3' y='7' width='18' height='13' rx='2'/%3E%3Cpath d='M9 7V4h6v3'/%3E%3C/svg%3E")}
+.tab[data-tab="rd"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M9 3h6M10 3v6l-6 10a1.5 1.5 0 0 0 1.3 2h13.4a1.5 1.5 0 0 0 1.3-2L14 9V3'/%3E%3C/svg%3E")}
+.tab[data-tab="daily"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E")}
+.tab[data-tab="items"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Cpath d='M3 12h18M10 8h4M10 16h4'/%3E%3C/svg%3E")}
+.tab[data-tab="cv"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M9 13h8M9 17h6'/%3E%3C/svg%3E")}
+.tab[data-tab="board"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M4 21V11h5v10M10 21V4h5v17M16 21v-7h5v7'/%3E%3C/svg%3E")}
+.tab[data-tab="stats"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M8 21h8M12 17v4M6 4h12v5a6 6 0 0 1-12 0z'/%3E%3C/svg%3E")}
+
+/* focus column */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow);padding:18px}
+.hero{display:flex;flex-direction:column;gap:14px}
+.rank{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rank span{font:600 13px var(--ui);color:var(--brand);background:var(--brand-soft);padding:3px 10px;border-radius:999px}
+.rank small{font-size:12px;color:var(--ink-3)}
+.lcd .lbl{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.count{font:700 clamp(2.4rem,5vw,3.3rem)/1.02 var(--display);letter-spacing:-.02em;font-variant-numeric:tabular-nums;word-break:break-word;margin:2px 0 4px}
+.rate{font:500 13px var(--mono);color:var(--ink-2)}
+.buffs{display:flex;flex-wrap:wrap;gap:6px}
+.buffs:empty{display:none}
+.buffs span{background:var(--accent-soft);color:var(--ink);font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px}
+.stampzone{display:block}
+.stamp{width:100%;min-height:118px;border:none;border-radius:18px;cursor:pointer;background:var(--accent);color:var(--accent-ink);
+  font:800 30px/1 var(--display);letter-spacing:-.01em;box-shadow:0 6px 0 #c9a400,0 14px 24px -10px rgba(120,95,0,.6);
+  transition:transform .06s,box-shadow .06s;user-select:none;-webkit-tap-highlight-color:transparent;display:grid;place-content:center;gap:6px}
+.stamp span{display:block;font:500 13px var(--ui);opacity:.75;letter-spacing:0}
+.stamp:hover{filter:brightness(1.03)}
+.stamp:active{transform:translateY(5px);box-shadow:0 1px 0 #c9a400,0 4px 10px -4px rgba(120,95,0,.5)}
+.combo{display:grid;gap:6px;font-size:12px;color:var(--ink-2)}
+.combo .row1{display:flex;justify-content:space-between}
+.combo .row1 b{font-family:var(--mono);color:var(--ink)}
+.combo .bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:none;box-shadow:none}
+.combo .bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),#ff9f1a);transition:width .12s}
+.float{position:fixed;pointer-events:none;font:800 22px var(--display);color:var(--ink);animation:up .9s ease-out forwards;z-index:30;text-shadow:0 2px 0 var(--accent)}
+.float.crit{color:var(--bad);font-size:32px}
 @keyframes up{to{transform:translateY(-70px);opacity:0}}
-.ticker{width:100%;max-width:420px;font-family:var(--display);font-size:1.05rem;border-left:3px solid var(--pen);padding:4px 0 4px 12px;min-height:3.2em}
-.ticker b{color:var(--pen)}
 
-.panel{min-width:0;display:flex;flex-direction:column;gap:14px}
-h2{font-family:var(--display);font-size:1.45rem;margin:0;color:var(--pen)}
-h2 + p{margin:-6px 0 0;color:var(--ink-soft);font-size:.88rem;max-width:62ch}
-.tabs{display:flex;gap:6px;flex-wrap:wrap}
-.tab{font:600 .82rem var(--body);background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--ink)}
-.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
-.tab:focus-visible,.row:focus-visible,.upg:focus-visible,.btn:focus-visible,.perk:focus-visible{outline:2px dashed var(--pen);outline-offset:2px}
+/* agenda */
+.agenda{padding:6px;display:flex;flex-direction:column;font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow)}
+.agenda .aghead{display:flex;justify-content:space-between;gap:8px;padding:8px 10px 6px;font-weight:700;font-family:var(--display);font-size:15px}
+.agenda .aghead span:last-child{font:600 12px var(--ui);color:var(--accent-ink);background:var(--accent);padding:3px 9px;border-radius:999px;align-self:center}
+.ag{display:block;width:100%;text-align:left;background:transparent;border:none;border-radius:var(--rad-s);padding:8px 10px 8px 28px;font:13px var(--ui);color:var(--ink-2);cursor:pointer;position:relative}
+.ag b{color:var(--ink);font-weight:650}
+.ag::before{content:"";position:absolute;left:11px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--line-2)}
+.ag.hot::before{background:var(--bad);box-shadow:0 0 0 4px var(--bad-soft)}
+.ag:hover{background:var(--surface-2)}
+.ag.info{cursor:default}.ag.info:hover{background:transparent}
+.ag.info::before{background:var(--brand-soft);border:2px solid var(--brand);width:6px;height:6px}
+
+/* main */
+.panelhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink-3);margin:-4px 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.panelhead #statusOwned{font-family:var(--mono)}
 .view{display:flex;flex-direction:column;gap:12px;min-width:0}
-.buymode{display:flex;gap:6px;align-items:center;font-size:.8rem;color:var(--ink-soft)}
-.buymode button{font:600 .78rem var(--mono);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);border-radius:4px;padding:2px 8px;cursor:pointer}
-.buymode button[aria-pressed="true"]{background:var(--pen);border-color:var(--pen);color:#fff}
+h2{font:700 20px/1.2 var(--display);letter-spacing:-.01em;margin:10px 0 0;color:var(--ink);text-wrap:balance}
+.view > h2:first-child{margin-top:0}
+h2 + p{color:var(--ink-2);max-width:70ch}
+h3{font:650 13px var(--ui);text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);margin:12px 0 2px}
+.empty{font-size:13px;color:var(--ink-3)}
 
-.list{display:flex;flex-direction:column;gap:6px}
-.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;text-align:left;width:100%;
-  background:rgba(251,252,250,.94);border:1.5px solid var(--grid);border-radius:6px;padding:8px 12px;cursor:pointer;color:var(--ink);font:inherit}
-.row:hover:not([disabled]){border-color:var(--pen)}
-.row[disabled]{opacity:.5;cursor:not-allowed}
-.row.locked .name,.row.locked .desc{filter:blur(4px)}
-.name{font-weight:600}
-.desc{grid-column:1;font-size:.8rem;color:var(--ink-soft)}
-.owned{font-family:var(--display);font-size:1.6rem;font-weight:700;grid-row:1/3;grid-column:2;text-align:right;line-height:1}
-.cost{font-family:var(--mono);font-size:.78rem;color:var(--pen)}
-.meta{display:flex;gap:10px;flex-wrap:wrap}
-
-.upgrades{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
-.upg{text-align:left;background:var(--postit);border:none;border-bottom:3px solid var(--postit-edge);padding:9px 12px;cursor:pointer;font:inherit;color:var(--ink);display:flex;flex-direction:column;gap:3px}
-.upg.click{background:var(--pink);border-bottom-color:#f093b0}
-.upg[disabled]{opacity:.5;cursor:not-allowed}
-.upg .name{font-family:var(--display);font-size:1.02rem;line-height:1.15}
-.empty{font-size:.9rem;color:var(--ink-soft);font-style:italic;margin:0}
-
-.quest{border:1.5px solid var(--ink);border-radius:6px;padding:10px 12px;background:rgba(251,252,250,.94);display:grid;gap:6px}
-.quest .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.qbar{height:10px;border:1.5px solid var(--ink);border-radius:5px;overflow:hidden}
-.qbar i{display:block;height:100%;background:var(--ok)}
-.quest .btn{justify-self:start}
-
-.perks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
-.perk{text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:1.5px dashed var(--ink-soft);border-radius:6px;padding:9px 12px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
-.perk.got{border-style:solid;border-color:var(--ok);background:#eaf6ee;cursor:default}
-.perk[disabled]:not(.got){opacity:.5;cursor:not-allowed}
-
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;font-size:.88rem}
-.stats div{border-top:1.5px solid var(--ink);padding-top:6px}
-.stats b{display:block;font-family:var(--mono);font-variant-numeric:tabular-nums}
-.ach{display:flex;flex-wrap:wrap;gap:5px}
-.ach span{font-size:.76rem;border:1.5px dashed var(--ink-soft);border-radius:4px;padding:2px 7px;color:var(--ink-soft)}
-.ach span.got{border-style:solid;border-color:var(--ok);color:var(--ok);font-weight:600}
-.btn{font:600 .88rem var(--body);background:var(--ink);color:var(--paper);border:none;border-radius:6px;padding:8px 14px;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--red);border:1.5px solid var(--red)}
-.btn.soft{background:transparent;color:var(--ink);border:1.5px solid var(--ink-soft)}
-.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn,.buymode button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:7px 14px;border-radius:var(--rad-s);
+  border:1px solid var(--line-2);background:var(--surface);font:600 13px var(--ui);color:var(--ink);cursor:pointer;transition:background .12s,border-color .12s}
+.btn:hover:not([disabled]),.buymode button:hover{border-color:var(--ink-3);background:var(--surface-2)}
+.btn.ghost{color:var(--bad);border-color:var(--bad-soft);background:var(--bad-soft)}
+.btn.ghost:hover:not([disabled]){border-color:var(--bad)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
 .btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.acct{display:grid;gap:10px;border:1.5px solid var(--ink);border-radius:6px;padding:12px;background:rgba(251,252,250,.94)}
-.field{display:grid;gap:4px;font-size:.85rem}
-.field input{flex:1 1 200px;min-width:0;font:inherit;border:1.5px solid var(--ink-soft);border-radius:6px;padding:7px 10px;background:var(--paper);color:var(--ink)}
-textarea{width:100%;min-height:70px;font:12px var(--mono);border:1.5px solid var(--ink-soft);border-radius:6px;padding:8px;background:var(--paper);color:var(--ink);box-sizing:border-box}
+.buymode{display:flex;gap:4px;align-items:center;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+.buymode button{min-height:30px;padding:4px 12px;font-family:var(--mono)}
+.buymode button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 
-table.board{width:100%;border-collapse:collapse;font-size:.9rem}
-.board td,.board th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--grid)}
-.board th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:600}
-.board td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
-.board tr.me td{background:var(--postit)}
+/* hires list */
+#hireList{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:0 14px;align-items:center;text-align:left;width:100%;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer;font:inherit;color:var(--ink);transition:border-color .12s,transform .06s,box-shadow .12s}
+.row::before{content:attr(data-ini);grid-column:1;grid-row:1/4;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font:700 15px var(--display);color:#fff;background:var(--ico,var(--brand))}
+.row .name{grid-column:2;font-weight:650}
+.row .desc{grid-column:2;font-size:12.5px;color:var(--ink-2)}
+.row .meta{grid-column:2;display:flex;gap:12px;flex-wrap:wrap;margin-top:2px}
+.row .owned{grid-column:3;grid-row:1/4;font:700 28px/1 var(--display);text-align:right;min-width:2ch;font-variant-numeric:tabular-nums}
+.row .cost{font:600 12px var(--mono);color:var(--brand)}
+.row .cost.c2{color:var(--ink-3)}
+.row:hover:not([disabled]){border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.row:active:not([disabled]){transform:scale(.995)}
+.row[disabled]{cursor:not-allowed}
+.row[disabled] .name,.row[disabled] .owned{color:var(--ink-3)}
+.row[disabled] .cost.c1{color:var(--bad)}
+.row.locked .name,.row.locked .desc{filter:blur(5px)}
+.row.locked::before{content:"?";background:var(--line-2)}
 
-.golden{position:fixed;z-index:40;cursor:pointer;background:var(--paper);border:2px solid var(--pen);border-radius:4px;
-  padding:8px 12px;font:700 .9rem var(--body);color:var(--pen);box-shadow:0 6px 0 var(--pen);animation:wobble 1.2s ease-in-out infinite;max-width:240px}
-.golden.bad{border-color:var(--red);color:var(--red);box-shadow:0 6px 0 var(--red)}
-@keyframes wobble{50%{transform:rotate(3deg) scale(1.05)}}
-.toasts{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:6px;align-items:center;width:max-content;max-width:calc(100% - 32px)}
-.toast{background:var(--ink);color:var(--paper);padding:9px 15px;border-radius:6px;font-size:.88rem}
+/* cards grid */
+.upgrades,.perks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.upg,.perk{text-align:left;font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:12px 14px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;transition:border-color .12s,box-shadow .12s}
+.upg:hover:not([disabled]),.perk:hover:not([disabled]){border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.upg .name,.perk .name{font-weight:650;font-size:14px;line-height:1.25}
+.upg.click{border-left:4px solid #ff9f1a}
+.upg .desc,.perk .desc{font-size:12.5px;color:var(--ink-2)}
+.upg .cost,.perk .cost{font:600 12px var(--mono);color:var(--brand);margin-top:auto;padding-top:4px}
+.upg[disabled],.perk[disabled]:not(.got):not(.run){cursor:not-allowed;background:var(--surface-2)}
+.upg[disabled] .name,.perk[disabled]:not(.got):not(.run) .name{color:var(--ink-3)}
+.upg[disabled] .cost,.perk[disabled]:not(.got):not(.run) .cost{color:var(--ink-3)}
+.perk.got{background:var(--ok-soft);border-color:transparent;cursor:default}
+.perk.got .name::before{content:"✓ ";color:var(--ok)}
+.perk.got .cost{color:var(--ok)}
+.perk.run{background:var(--accent-soft);border-color:transparent;cursor:default}
+.perk.run .cost{color:var(--ink)}
+
+/* quests, slots, bars */
+#questList,#dailyList{display:flex;flex-direction:column;gap:10px}
+.quest,.slot{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;background:var(--surface);align-content:start}
+.quest .top,.slot .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.quest .cost{font:600 12px var(--mono);color:var(--brand)}
+.qbar,.pbar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:none;padding:0;box-shadow:none}
+.qbar i{display:block;height:100%;border-radius:99px;background:var(--ok)}
+.pbar i{display:block;height:100%;width:0;border-radius:99px;background:var(--brand)}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.slot.ready{background:var(--accent-soft);border-color:transparent}
+.slot.free{border-style:dashed;background:transparent}
+.slot.locked{border-style:dashed;background:transparent;opacity:.6}
+.tag{font:600 11px var(--mono);padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+
+/* pointeuse */
+.badgebox{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:16px;border-radius:14px;background:var(--surface-2)}
+.badgebox .badgeinfo{flex:1 1 240px;min-width:0;display:grid;gap:8px}
+.badgeBtn{width:148px;height:100px;flex:none;border:none;border-radius:16px;cursor:pointer;background:var(--brand);color:#fff;font:800 22px var(--display);
+  box-shadow:0 5px 0 color-mix(in srgb,var(--brand) 60%,#000);transition:transform .06s,box-shadow .06s}
+.badgeBtn span{display:block;font:500 12px var(--ui);opacity:.85;margin-top:4px}
+.badgeBtn:active:not([disabled]){transform:translateY(4px);box-shadow:0 1px 0 color-mix(in srgb,var(--brand) 60%,#000)}
+.badgeBtn[disabled]{background:var(--ok);box-shadow:none;cursor:default}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots span{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font:600 13px var(--mono);background:var(--surface);border:1px solid var(--line);color:var(--ink-3)}
+.dots span.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.week{display:grid;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.wk{display:grid;grid-template-columns:minmax(160px,auto) minmax(0,1fr);gap:4px 14px;padding:9px 14px;font-size:13px;border-bottom:1px solid var(--line)}
+.wk:last-child{border-bottom:none}
+.wk span{color:var(--ink-2)}
+.wk.today{background:var(--accent-soft)}
+.wk.today span{color:var(--ink)}
+@media (max-width:520px){.wk{grid-template-columns:1fr}}
+
+/* tiroir */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--rc);color:var(--ink)}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.item{display:grid;grid-template-columns:40px minmax(0,1fr);gap:0 10px;align-items:center;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;position:relative;overflow:hidden}
+.item::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rc)}
+.item .ii{grid-row:1/4;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font:700 13px var(--display);color:#fff;background:var(--rc)}
+.item .name{font-weight:650;font-size:13px;line-height:1.2}
+.item .desc{font-size:11.5px;color:var(--ink-2)}
+.item.unk{background:var(--surface-2)}
+.item.unk .ii{background:var(--line-2)}
+.item.unk .name{color:var(--ink-3)}
+
+/* stats, trophies, board, forms */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;font-size:12px}
+.stats div{background:var(--surface-2);border-radius:12px;padding:10px 12px;color:var(--ink-3)}
+.stats b{display:block;margin-top:2px;color:var(--ink);font:700 18px var(--display);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ach{display:flex;flex-wrap:wrap;gap:6px}
+.ach span{font-size:12px;padding:3px 10px;border-radius:999px;color:var(--ink-3);background:var(--surface-2)}
+.ach span.got{color:var(--ok);background:var(--ok-soft);font-weight:600}
+.acct{display:grid;gap:12px;border:1px solid var(--line);border-radius:12px;padding:14px}
+.field{display:grid;gap:6px;font-size:13px;font-weight:600}
+.field input,textarea{font:14px var(--ui);color:var(--ink);background:var(--surface);padding:8px 11px;border:1px solid var(--line-2);border-radius:var(--rad-s)}
+.field input:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.field input{flex:1 1 200px;min-width:0}
+textarea{width:100%;min-height:80px;font:12px var(--mono)}
+#boardBox{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+#boardBox .empty{padding:14px}
+table.board{width:100%;border-collapse:collapse;font-size:13px}
+.board th{text-align:left;font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.board td{padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.board tr:last-child td{border-bottom:none}
+.board td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.board tr.me td{background:var(--accent-soft);font-weight:650}
+
+/* popups */
+.golden{position:fixed;z-index:60;cursor:pointer;text-align:left;width:270px;max-width:calc(100vw - 32px);padding:34px 16px 14px;font:600 14px var(--ui);color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 40px -12px rgba(0,0,0,.35);animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
+.golden::before{content:"Message de la Direction";position:absolute;left:16px;top:12px;font:700 11px var(--ui);letter-spacing:.07em;text-transform:uppercase;color:var(--brand)}
+.golden::after{content:"Ouvrir";display:inline-block;margin-top:10px;padding:5px 12px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:700}
+.golden.bad::before{content:"Alerte réseau";color:var(--bad)}
+.golden.bad::after{background:var(--bad-soft);color:var(--bad)}
+@keyframes pop{from{transform:scale(.8) translateY(10px);opacity:0}}
+.toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;flex-direction:column;gap:8px;align-items:flex-end;max-width:min(360px,calc(100vw - 32px))}
+.toast{background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:13px;box-shadow:0 10px 30px -10px rgba(0,0,0,.4);animation:pop .25s ease-out}
+.modal{position:fixed;inset:0;z-index:95;background:rgba(10,12,16,.45);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px}
+.dialog{width:min(480px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45);padding:22px;display:grid;gap:14px}
+.dialog .dtitle{font:700 20px/1.2 var(--display)}
+.dialog .dbody{display:grid;gap:8px;font-size:14px;color:var(--ink-2)}
+.dialog .dbody b{color:var(--ink)}
+.dialog .dfoot{display:flex;justify-content:flex-end}
+.dialog .dfoot .btn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);min-width:110px}
 
 #boss{position:fixed;inset:0;z-index:100;background:#fff;color:#222;font:13px/1.3 Calibri,Arial,sans-serif;overflow:auto}
 #boss .bar{background:#217346;color:#fff;padding:8px 12px;font-weight:600}
@@ -146,40 +300,35 @@ table.board{width:100%;border-collapse:collapse;font-size:.9rem}
 #boss table{border-collapse:collapse;min-width:900px}
 #boss td,#boss th{border:1px solid #d4d4d4;padding:3px 8px;white-space:nowrap}
 #boss th{background:#f3f3f3;font-weight:normal;color:#555}
-@media (prefers-reduced-motion:reduce){.float,.golden{animation:none}.stamp{transition:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Open Space Tycoon <small>bâtis ton empire du tertiaire</small></h1>
-    <div class="hint"><span>Manager en approche ? <kbd>Échap</kbd> ouvre un tableur très sérieux.</span><span class="cloud" id="cloud">Sauvegarde locale</span></div>
-  </header>
-
-  <section class="left">
-    <div class="postit">
-      <div class="title" id="rank">Stagiaire non rémunéré</div>
-      <div class="lbl">Tâches bouclées</div>
-      <div class="count" id="count">0</div>
-      <div class="rate"><span id="rate">0</span> / s · <span id="clickval">1</span> par clic</div>
-      <div class="buffs" id="buffs"></div>
-    </div>
-    <button class="stamp" id="stamp" aria-label="Valider une tâche">VALIDÉ<span>clique en rythme</span></button>
-    <div class="combo"><div style="display:flex;justify-content:space-between"><span>Combo café</span><b id="comboTxt">×1,00</b></div><div class="bar"><i id="comboBar"></i></div></div>
-    <div class="ticker" id="ticker"></div>
-  </section>
-
-  <section class="panel">
+<div class="announce" role="region" aria-label="Brèves">
+  <span class="pill">Brève</span><div class="ticker" id="ticker"></div>
+  <span class="cloud" id="cloud">Sauvegarde locale</span><span class="clock" id="clock">--:--</span>
+</div>
+<div class="app">
+  <aside class="nav" aria-label="Navigation">
+    <div class="brand"><span class="logo" aria-hidden="true">OS</span><div><b>Open Space</b><small>Tycoon</small></div></div>
     <div class="tabs" role="tablist" id="tabs">
-      <button class="tab" role="tab" aria-selected="true" data-tab="hire">Recrutements</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="upg">Améliorations</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="quest">Objectifs</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="cv">CV</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="board">Classement</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="stats">Carrière</button>
-    </div>
+        <button class="tab" role="tab" aria-selected="true" data-tab="hire">Recrutements</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="upg">Améliorations</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="quest">Objectifs</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="proj">Projets</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="rd">R&amp;D</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="daily">Pointeuse</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="items">Tiroir</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="cv">CV</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="board">Classement</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="stats">Carrière</button>
+      </div>
+    <button class="discreet" id="startBtn" title="Affiche un faux tableur">Mode discret <kbd>Échap</kbd></button>
+  </aside>
 
+  <main class="main">
+    <div class="panelhead"><span id="statusLeft">Prêt</span><span id="statusOwned"></span></div>
     <div class="view" id="v-hire">
       <div class="buymode" id="buymode">Acheter par
         <button data-n="1" aria-pressed="true">1</button><button data-n="10" aria-pressed="false">10</button><button data-n="100" aria-pressed="false">100</button><button data-n="max" aria-pressed="false">max</button>
@@ -188,7 +337,7 @@ table.board{width:100%;border-collapse:collapse;font-size:.9rem}
     </div>
 
     <div class="view" id="v-upg" hidden>
-      <div class="btns"><button class="btn soft" id="buyAllUpg">Tout acheter (le moins cher d'abord)</button></div>
+      <div class="btns"><button class="btn" id="buyAllUpg">Tout acheter (le moins cher d'abord)</button></div>
       <div class="upgrades" id="upgList"></div>
     </div>
 
@@ -198,17 +347,84 @@ table.board{width:100%;border-collapse:collapse;font-size:.9rem}
       <div class="list" id="questList"></div>
     </div>
 
+    <div class="view" id="v-proj" hidden>
+      <h2>Projets clients</h2>
+      <p>Les projets avancent en temps réel, même quand le jeu est fermé. Reviens les récupérer pour toucher une prime, des tickets resto et parfois une fourniture. Plus un projet est long, plus il rapporte d'objets et de tickets.</p>
+      <div class="btns"><span class="empty" id="projInfo"></span><button class="btn" id="projAll" hidden>Tout récupérer</button></div>
+      <div class="slots" id="projSlots"></div>
+      <h2>Appels d'offres</h2>
+      <div class="perks" id="projOffers"></div>
+    </div>
+
+    <div class="view" id="v-rd" hidden>
+      <h2>Recherche et développement</h2>
+      <p>Des bonus permanents, conservés après une démission et même après la création de ta boîte. Chaque recherche coûte des tickets resto et prend du vrai temps, de 5 minutes à une semaine. Elle continue jeu fermé.</p>
+      <p class="empty" id="rdInfo"></p>
+      <div class="slots" id="labs"></div>
+      <div id="rdTree" class="rdtree"></div>
+    </div>
+
+    <div class="view" id="v-daily" hidden>
+      <h2>Pointeuse</h2>
+      <p>Badge une fois par jour pour gagner des tickets resto. Plus ta série est longue, plus tu en gagnes. Tes jours de RTT sauvent la série si tu rates une journée.</p>
+      <div class="badgebox">
+        <button class="badgeBtn" id="badgeBtn">Badger<span>une fois par jour</span></button>
+        <div class="badgeinfo">
+          <p id="streakTxt"></p>
+          <div class="dots" id="streakDots"></div>
+          <p class="empty" id="streakNext"></p>
+        </div>
+      </div>
+      <h2>Défis du jour</h2>
+      <p id="dailyInfo"></p>
+      <div class="list" id="dailyList"></div>
+      <h2>Semaine type</h2>
+      <p>Chaque jour de la semaine a sa règle, selon ton calendrier réel.</p>
+      <div class="week" id="weekList"></div>
+    </div>
+
+    <div class="view" id="v-items" hidden>
+      <h2>Distributeur de fournitures</h2>
+      <p>Glisse tes tickets resto dans le distributeur. Chaque fourniture donne un bonus permanent, conservé pour toujours. Les projets longs en font aussi tomber.</p>
+      <div class="btns">
+        <button class="btn" id="pull1">1 tirage (3 tickets)</button>
+        <button class="btn" id="pull10">10 tirages (27 tickets, 1 épique ou mieux garanti)</button>
+      </div>
+      <p class="empty" id="pullInfo"></p>
+      <div class="chips" id="pullRes"></div>
+      <h2>Tiroir de bureau</h2>
+      <p id="itemsSummary"></p>
+      <div class="items" id="itemGrid"></div>
+    </div>
+
     <div class="view" id="v-cv" hidden>
       <h2>Démission</h2>
-      <p>Tu repars de zéro dans un nouveau poste, mais tu gardes ton expérience, tes trophées et ton CV. Chaque point d'XP donne +5 % de production pour toujours, et autant de lignes de CV à dépenser ci-dessous.</p>
+      <p>Tu repars de zéro dans un nouveau poste, mais tu gardes ton XP, tes trophées et tes compétences. Chaque point d'XP donne +1 % de production. L'XP se calcule sur l'ensemble des postes : chaque démission ne rapporte que ce que tu as gagné de plus.</p>
       <div class="btns">
         <button class="btn ghost" id="quit">Démissionner (+<span id="xpgain">0</span> XP)</button>
         <button class="btn ghost" id="quitYes" hidden>Oui, je pose ma lettre</button>
-        <span id="xpNext" style="font-size:.82rem;color:var(--ink-soft)"></span>
       </div>
-      <h2>Lignes de CV</h2>
-      <p>Compétences permanentes. Tu as <b id="tokens">0</b> ligne(s) de CV disponible(s).</p>
+      <p class="empty" id="xpNow"></p>
+      <p class="empty" id="xpNext"></p>
+      <h2>Compétences uniques</h2>
+      <p>Tu as <b id="tokens">0</b> ligne(s) de CV à dépenser.</p>
       <div class="perks" id="perkList"></div>
+      <h2>Compétences à niveaux</h2>
+      <p>Chaque niveau coûte un peu plus cher que le précédent. De quoi dépenser tes lignes de CV pendant longtemps.</p>
+      <div class="perks" id="levelList"></div>
+      <div id="ascBox" class="view" hidden>
+        <h2>Créer ta boîte</h2>
+        <p>Le grand saut. Tu perds ton XP, tes lignes de CV et tes compétences, mais tu gagnes des parts de fondateur : +25 % de production chacune, pour toujours, et une boutique d'atouts très puissants.</p>
+        <div class="btns">
+          <button class="btn ghost" id="ascend">Créer ma boîte (+<span id="sharesgain">0</span> part(s))</button>
+          <button class="btn ghost" id="ascendYes" hidden>Oui, je lance ma start-up</button>
+        </div>
+        <p class="empty" id="sharesNow"></p>
+        <p class="empty" id="sharesNext"></p>
+        <h2>Atouts de fondateur</h2>
+        <p>Tu as <b id="shares">0</b> part(s) à investir. Ces atouts restent acquis pour toujours.</p>
+        <div class="perks" id="founderList"></div>
+      </div>
     </div>
 
     <div class="view" id="v-board" hidden>
@@ -217,8 +433,8 @@ table.board{width:100%;border-collapse:collapse;font-size:.9rem}
       <div class="acct">
         <div class="field"><label for="pseudo">Ton pseudo au classement</label><div class="btns"><input id="pseudo" maxlength="24" placeholder="ex. Roi du tampon"><button class="btn" id="pseudoSave">Enregistrer</button></div></div>
         <p class="empty" id="acctStatus"></p>
-        <div class="field" id="emailRow"><label for="email">Ton email (lien de connexion, sans mot de passe)</label><div class="btns"><input id="email" type="email" placeholder="prenom.nom@exemple.fr"><button class="btn soft" id="magic">Recevoir le lien</button></div></div>
-        <div class="btns"><button class="btn soft" id="logout" hidden>Se déconnecter</button></div>
+        <div class="field" id="emailRow"><label for="email">Ton email (lien de connexion, sans mot de passe)</label><div class="btns"><input id="email" type="email" placeholder="prenom.nom@exemple.fr"><button class="btn" id="magic">Recevoir le lien</button></div></div>
+        <div class="btns"><button class="btn" id="logout" hidden>Se déconnecter</button></div>
       </div>
       <div id="boardBox"><p class="empty">Chargement du classement…</p></div>
     </div>
@@ -231,18 +447,45 @@ table.board{width:100%;border-collapse:collapse;font-size:.9rem}
       <h2>Sauvegarde</h2>
       <p>Ta partie est sauvegardée automatiquement. Tu peux aussi copier un code de sauvegarde pour la transférer à la main.</p>
       <div class="btns">
-        <button class="btn soft" id="exportBtn">Copier mon code</button>
-        <button class="btn soft" id="importBtn">Charger un code</button>
-        <button class="btn soft" id="saveNow">Sauvegarder maintenant</button>
+        <button class="btn" id="exportBtn">Copier mon code</button>
+        <button class="btn" id="importBtn">Charger un code</button>
+        <button class="btn" id="saveNow">Sauvegarder maintenant</button>
         <button class="btn ghost" id="reset">Tout effacer</button>
         <button class="btn ghost" id="resetYes" hidden>Confirmer l'effacement total</button>
       </div>
       <textarea id="saveCode" aria-label="Code de sauvegarde" placeholder="Colle un code de sauvegarde ici puis clique sur « Charger un code »"></textarea>
     </div>
-  </section>
+  </main>
+
+  <aside class="focus" aria-label="Productivité">
+    <section class="card hero">
+      <div class="rank"><span id="rank">Stagiaire non rémunéré</span><small>Ton titre</small></div>
+      <div class="lcd">
+        <div class="lbl">Tâches bouclées</div>
+        <div class="count" id="count">0</div>
+        <div class="rate"><span id="rate">0</span>/s · <span id="clickval">1</span> par clic</div>
+      </div>
+      <div class="buffs" id="buffs"></div>
+      <div class="stampzone"><button class="stamp" id="stamp" aria-label="Valider une tâche">Valider<span>clique en rythme pour le combo café</span></button></div>
+      <div class="combo"><div class="row1"><span>Combo café</span><b id="comboTxt">×1,00</b></div><div class="bar"><i id="comboBar"></i></div></div>
+    </section>
+    <div class="agenda" aria-label="Agenda">
+      <div class="aghead"><span>Agenda</span><span id="agTickets">0 ticket resto</span></div>
+      <button class="ag" data-go="daily" id="agDaily"></button>
+      <button class="ag" data-go="proj" id="agProj"></button>
+      <button class="ag" data-go="rd" id="agRd"></button>
+      <div class="ag info" id="agDay"></div>
+      <div class="ag info" id="agOff"></div>
+    </div>
+  </aside>
 </div>
 
 <div class="toasts" id="toasts"></div>
+<div class="modal" id="modal" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="dtitle" id="modalTitle">Information</div>
+  <div class="dbody" id="modalBody"></div>
+  <div class="dfoot"><button class="btn" id="modalOk">C'est noté</button></div>
+</div></div>
 <div id="boss" hidden>
   <div class="bar">Budget_Previsionnel_T4_v12_FINAL_vraiment_final.xlsx</div>
   <div class="menu">Fichier &nbsp; Accueil &nbsp; Insertion &nbsp; Formules &nbsp; Données &nbsp; Révision &nbsp; Affichage</div>
@@ -268,44 +511,77 @@ const H = [
   {id:"tour", name:"Tour à La Défense", desc:"48 étages, 2 ascenseurs qui marchent.", base:1.4e13, rate:6.5e7},
   {id:"meta", name:"Cabinet de conseil en conseil", desc:"Conseille les consultants sur leurs conseils.", base:1.7e14, rate:4.3e8},
   {id:"orb",  name:"Coworking en orbite", desc:"Le flex office, en apesanteur.", base:2.1e15, rate:2.9e9},
-  {id:"multi",name:"Multivers de réunions", desc:"Chaque réunion en engendre une infinité d'autres.", base:2.6e16, rate:2.1e10}
+  {id:"multi",name:"Multivers de réunions", desc:"Chaque réunion en engendre une infinité d'autres.", base:2.6e16, rate:2.1e10},
+  {id:"minis",name:"Ministère du Reporting", desc:"Produit des rapports sur la production de rapports.", base:3.3e17, rate:1.5e11},
+  {id:"galax",name:"Galaxie de Post-it", desc:"Visible depuis la Terre. Jaune fluo.", base:4.2e18, rate:1.1e12},
+  {id:"trou", name:"Trou noir administratif", desc:"Les formulaires y entrent, rien n'en ressort.", base:5.5e19, rate:8e12},
+  {id:"tempo",name:"Réunion temporelle", desc:"Elle a commencé avant d'avoir été planifiée.", base:7e20, rate:6e13},
+  {id:"cosmo",name:"Grand Open Space Cosmique", desc:"Un seul bureau partagé par tout l'univers.", base:9e21, rate:4.5e14}
 ];
 const HB = Object.fromEntries(H.map(h=>[h.id,h]));
 
 const tiers = [[1,10,"Fiche de poste claire"],[5,50,"Formation e-learning"],[25,500,"Badge d'accès premium"],[50,5e4,"Bureau près de la fenêtre"],
-  [100,5e6,"Titre de « Head of »"],[150,5e8,"Voiture de fonction"],[200,5e10,"Stock-options"],[250,5e12,"Parachute doré"]];
+  [100,5e6,"Titre de « Head of »"],[150,5e8,"Voiture de fonction"],[200,5e10,"Stock-options"],[250,5e12,"Parachute doré"],
+  [300,5e14,"Jet privé"],[350,5e16,"Île privée"],[400,5e18,"Fauteuil au conseil d'administration"],[500,5e20,"Statue dans le hall"]];
 const U = [];
 tiers.forEach(([n,m,tn])=>H.forEach(h=>U.push({id:h.id+"_"+n,kind:"b",name:tn+" : "+h.name,desc:h.name+" ×2 (dès "+n+")",cost:h.base*m,req:s=>s.owned[h.id]>=n,apply:M=>{M.mult[h.id]*=2}})));
 [[100,"Souris ergonomique",1],[500,"Raccourcis clavier",5],[1e4,"Double écran",25],[1e5,"Siège gamer validé RH",50],[1e7,"Tampon « VALIDÉ » en or",100],
- [1e9,"Clavier mécanique qui claque",200],[1e11,"Télépathie managériale",300],[1e13,"Clic quantique",400]].forEach(([c,n,cl],i)=>
+ [1e9,"Clavier mécanique qui claque",200],[1e11,"Télépathie managériale",300],[1e13,"Clic quantique",400],[1e16,"Doigt de la direction",600],[1e19,"Clic interdimensionnel",900],[1e23,"Le Clic Originel",1500]].forEach(([c,n,cl],i)=>
   U.push({id:"click"+i,kind:"c",name:n,desc:"Clic ×2 et +1 % de ta production par seconde à chaque clic",cost:c,req:s=>s.clicks>=cl,apply:M=>{M.clickMult*=2;M.clickPct+=0.01}}));
-[[5e4,"Capsules de café premium"],[5e6,"Babyfoot à la cafét'"],[5e8,"Semaine de 4 jours"],[5e10,"Télétravail illimité"],[5e12,"Sieste sur la moquette"],[5e14,"Afterwork tous les soirs"],[5e16,"Comité de direction en tongs"],[5e18,"Bonheur au travail certifié ISO"]].forEach(([c,n],i)=>
+[[5e4,"Capsules de café premium"],[5e6,"Babyfoot à la cafét'"],[5e8,"Semaine de 4 jours"],[5e10,"Télétravail illimité"],[5e12,"Sieste sur la moquette"],[5e14,"Afterwork tous les soirs"],[5e16,"Comité de direction en tongs"],[5e18,"Bonheur au travail certifié ISO"],[5e20,"Chief Happiness Officer"],[5e22,"Salle de sieste en apesanteur"],[5e24,"Vendredi permanent"],[5e26,"Fusion avec la machine à café"],[5e28,"Bureau dans un volcan"],[5e30,"Réunion annulée par magie"]].forEach(([c,n],i)=>
   U.push({id:"glob"+i,kind:"g",name:n,desc:"Toute la production +25 %",cost:c,req:s=>s.total>=c/5,apply:M=>{M.global*=1.25}}));
 [["stag","ia","Stagiaires boostés par l'IA",0.05],["cafe","reu","Café servi en réunion",0.03],["xls","cons","Le consultant comprend la macro",0.02],
- ["semi","reorg","Séminaire de réorganisation",0.02],["syn","lic","Synergie licorne",0.01],["rach","tour","Siège consolidé",0.01],["meta","orb","Conseil en apesanteur",0.01]].forEach(([a,b,n,p])=>
+ ["semi","reorg","Séminaire de réorganisation",0.02],["syn","lic","Synergie licorne",0.01],["rach","tour","Siège consolidé",0.01],["meta","orb","Conseil en apesanteur",0.01],["minis","multi","Rapport multiversel",0.01],["galax","trou","Post-it aspiré",0.01],["tempo","cosmo","Boucle du lundi matin",0.01]].forEach(([a,b,n,p])=>
   U.push({id:"syn_"+a+b,kind:"s",name:n,desc:HB[a].name+" +"+(p*100)+" % par "+HB[b].name.toLowerCase(),cost:HB[b].base*30,req:s=>s.owned[a]>=15&&s.owned[b]>=5,apply:M=>{M.syn.push([a,b,p])}}));
 U.sort((a,b)=>a.cost-b.cost);
 const UB = Object.fromEntries(U.map(u=>[u.id,u]));
 
 const PERKS = [
   {id:"net",  name:"Réseau LinkedIn", desc:"Chaque nouveau poste démarre avec 10 stagiaires et 5 machines à café.", cost:1},
-  {id:"tele", name:"Télétravail assumé", desc:"Production hors-ligne à 100 % au lieu de 50 %, jusqu'à 12 h.", cost:2},
+  {id:"tele", name:"Télétravail assumé", desc:"Hors-ligne : +5 pts d'efficacité et +4 h d'absence comptée.", cost:2},
   {id:"crit", name:"Doigts d'or", desc:"5 % de chances qu'un clic vaille ×10.", cost:2},
-  {id:"quest4",name:"Multitâche", desc:"4 objectifs en parallèle au lieu de 3.", cost:2},
-  {id:"gold", name:"Bouche-à-oreille", desc:"Les surprises arrivent deux fois plus souvent.", cost:3},
-  {id:"nego", name:"Négociateur", desc:"Recrutements 10 % moins chers.", cost:3},
-  {id:"combo",name:"Café serré", desc:"Le combo café monte jusqu'à ×5 au lieu de ×3.", cost:3},
-  {id:"charm",name:"Charisme", desc:"Les bonus des surprises durent deux fois plus longtemps.", cost:4},
-  {id:"bonus",name:"Primes négociées", desc:"Récompenses des objectifs ×3.", cost:4},
-  {id:"mentor",name:"Mentor", desc:"+50 % d'XP à chaque démission.", cost:6},
-  {id:"keepu",name:"Mémoire d'éléphant", desc:"Garde les améliorations de clic à la démission.", cost:6},
-  {id:"amb",  name:"Ambition", desc:"Chaque trophée donne +2 % au lieu de +1 %.", cost:8},
-  {id:"auto", name:"Stagiaire cliqueur", desc:"Un stagiaire clique 5 fois par seconde pour toi.", cost:10},
-  {id:"ceo",  name:"Carnet d'adresses du CAC 40", desc:"Toute la production ×2.", cost:15}
+  {id:"quest4",name:"Multitâche", desc:"4 objectifs en parallèle au lieu de 3.", cost:3},
+  {id:"gold", name:"Bouche-à-oreille", desc:"Les surprises arrivent deux fois plus souvent.", cost:4},
+  {id:"nego", name:"Négociateur", desc:"Recrutements 10 % moins chers.", cost:4},
+  {id:"combo",name:"Café serré", desc:"Le combo café monte jusqu'à ×5 au lieu de ×3.", cost:5},
+  {id:"charm",name:"Charisme", desc:"Les bonus des surprises durent deux fois plus longtemps.", cost:6},
+  {id:"bonus",name:"Primes négociées", desc:"Récompenses des objectifs ×3.", cost:6},
+  {id:"mentor",name:"Mentor", desc:"+50 % d'XP à chaque démission.", cost:8},
+  {id:"keepu",name:"Mémoire d'éléphant", desc:"Garde les améliorations de clic à la démission.", cost:10},
+  {id:"amb",  name:"Ambition", desc:"Chaque trophée donne +2 % au lieu de +1 %.", cost:12},
+  {id:"auto", name:"Stagiaire cliqueur", desc:"Un stagiaire clique 5 fois par seconde pour toi.", cost:15},
+  {id:"ceo",  name:"Carnet d'adresses du CAC 40", desc:"Toute la production ×2.", cost:20},
+  {id:"ghost",name:"Ghostwriter LinkedIn", desc:"XP gagnée ×2.", cost:30},
+  {id:"fusion",name:"Fusion des services", desc:"Les synergies comptent double.", cost:45},
+  {id:"para", name:"Indemnités de départ", desc:"Chaque nouveau poste démarre avec 1 % des tâches du poste précédent.", cost:60},
+  {id:"adj",  name:"Directeur adjoint", desc:"Toute la production ×3.", cost:90},
+  {id:"clone",name:"Clonage RH", desc:"Recrutements 25 % moins chers.", cost:130},
+  {id:"hotline",name:"Ligne directe avec le DG", desc:"Les surprises sont deux fois plus puissantes.", cost:200},
+  {id:"board",name:"Siège au comité exécutif", desc:"Chaque trophée donne +3 %.", cost:300}
+];
+const LEVELS = [
+  {id:"form", name:"Formation continue", desc:"+10 % de production par niveau.", base:1, growth:1.35},
+  {id:"dext", name:"Dextérité", desc:"+25 % par clic par niveau.", base:1, growth:1.35},
+  {id:"deleg",name:"Délégation", desc:"Primes d'objectifs +25 % par niveau.", base:2, growth:1.4},
+  {id:"stagc",name:"Stagiaires cliqueurs", desc:"+3 clics automatiques par seconde par niveau.", base:4, growth:1.45},
+  {id:"xpb",  name:"Personal branding", desc:"+10 % d'XP par niveau.", base:5, growth:1.6},
+  {id:"flair",name:"Flair", desc:"Surprises 5 % plus fréquentes par niveau.", base:2, growth:1.5, max:20},
+  {id:"nego2",name:"Négociation avancée", desc:"Recrutements 2 % moins chers par niveau.", base:3, growth:1.5, max:20}
+];
+const FOUNDER = [
+  {id:"f_pitch",  name:"Pitch deck", desc:"XP gagnée ×2.", cost:1},
+  {id:"f_angel",  name:"Business angel", desc:"Lignes de CV gagnées ×2.", cost:2},
+  {id:"f_keep",   name:"Équipe fondatrice", desc:"Garde tes compétences uniques (pas les niveaux) quand tu crées une boîte.", cost:3},
+  {id:"f_stationf",name:"Bureaux à Station F", desc:"Toute la production ×5.", cost:5},
+  {id:"f_auto",   name:"Process automatisés", desc:"Les améliorations s'achètent toutes seules.", cost:8},
+  {id:"f_unicorn",name:"Statut de licorne", desc:"Clics ×10 et combo café jusqu'à ×8.", cost:12},
+  {id:"f_ipo",    name:"Introduction en bourse", desc:"Production ×10 et XP ×3.", cost:25},
+  {id:"f_empire", name:"Conglomérat mondial", desc:"Production ×100.", cost:60},
+  {id:"f_legend", name:"Légende de la Silicon Valley", desc:"Production ×1000 et XP ×5.", cost:200}
 ];
 
 const RANKS = [[0,"Stagiaire non rémunéré"],[1e3,"Alternant"],[1e5,"Assistant administratif"],[1e7,"Chargé de mission"],[1e9,"Chef de projet"],[1e11,"Manager de managers"],
- [1e13,"Directeur de pôle"],[1e15,"VP Synergies"],[1e17,"Directeur général"],[1e19,"Président du conseil"],[1e21,"Légende du CAC 40"],[1e24,"Entité corporate cosmique"]];
+ [1e13,"Directeur de pôle"],[1e15,"VP Synergies"],[1e17,"Directeur général"],[1e19,"Président du conseil"],[1e21,"Légende du CAC 40"],[1e24,"Entité corporate cosmique"],[1e28,"Divinité du tableur"],[1e33,"Fin du capitalisme tardif"],[1e40,"Au-delà de l'organigramme"]];
 
 const ACH = [
   ["Premier mail",s=>s.clicks>=1],["Tendinite naissante",s=>s.clicks>=500],["Clic olympique",s=>s.clicks>=5000],["Le doigt d'acier",s=>s.clicks>=25000],
@@ -320,7 +596,13 @@ const ACH = [
   ["Combo barista",s=>s.maxCombo>=30],["Combo expresso",s=>s.maxCombo>=60],
   ["Cent améliorations",s=>s.upg.length>=100],["Collectionneur de badges",s=>s.upg.length>=60]
 ];
-H.forEach(h=>[50,100,200].forEach(n=>ACH.push([n+" × "+h.name,s=>s.owned[h.id]>=n])));
+ACH.push(["Mille milliards de milliards",s=>s.allTime>=1e21],["Nombre astronomique",s=>s.allTime>=1e27],["Plus de tâches que d'atomes",s=>s.allTime>=1e36],
+  ["Mille milliards par seconde",s=>s.bestRate>=1e12],["Un trillion par seconde",s=>s.bestRate>=1e18],
+  ["10 XP",s=>s.xpLifetime>=10],["100 XP",s=>s.xpLifetime>=100],["1 000 XP",s=>s.xpLifetime>=1000],["10 000 XP",s=>s.xpLifetime>=1e4],
+  ["Démissionnaire en série",s=>s.resets>=50],["Fondateur",s=>s.ascensions>=1],["Serial entrepreneur",s=>s.ascensions>=3],["Business angel à son tour",s=>s.ascensions>=10],
+  ["CV béton",s=>levelsTotal(s)>=25],["CV de légende",s=>levelsTotal(s)>=100]);
+function levelsTotal(s){ return Object.values(s.perkLv||{}).reduce((a,b)=>a+b,0); }
+H.forEach(h=>[50,100,200,300,500].forEach(n=>ACH.push([n+" × "+h.name,s=>s.owned[h.id]>=n])));
 
 const NEWS = [
   "Le serveur de fichiers a encore planté. <b>Personne n'est surpris.</b>",
@@ -351,18 +633,141 @@ const NEWS = [
   "Le CODIR valide un nouveau logo. <b>Il est bleu, comme l'ancien.</b>"
 ];
 
+/* ---------- Long terme : données ---------- */
+const MIN=60000;
+function dayNum(t){ const d=new Date(t); return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000); }
+function hashStr(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function rng(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function fmtDur(ms){ let s=Math.max(0,Math.ceil(ms/1000)); const d=Math.floor(s/86400); s%=86400; const h=Math.floor(s/3600); s%=3600; const m=Math.floor(s/60); s%=60;
+  if(d) return d+" j "+h+" h"; if(h) return h+" h "+String(m).padStart(2,"0"); if(m) return m+" min "+String(s).padStart(2,"0"); return s+" s"; }
+function num(x){ return String(Math.round(x*100)/100).replace(".",","); }
+
+const WEEK=[
+  {n:"Dimanche d'astreinte",d:"Gains hors-ligne ×2",off:2},
+  {n:"Lundi matin",d:"Production −10 %, mais chaque défi du jour rapporte 1 ticket de plus",prod:0.9,chal:1},
+  {n:"Mardi des projets",d:"Projets lancés aujourd'hui 20 % plus courts",proj:0.8},
+  {n:"Mercredi des enfants",d:"Messages de la Direction 50 % plus fréquents",gold:1.5},
+  {n:"Jeudi afterwork",d:"Clics +50 %",click:1.5},
+  {n:"Vendredi relâche",d:"Production ×1,5 à partir de 14 h",prod:1.5,after:14},
+  {n:"Samedi d'astreinte",d:"Gains hors-ligne ×2",off:2}
+];
+function weekday(){ const d=new Date(), w=Object.assign({},WEEK[d.getDay()]); w.idx=d.getDay(); if(w.after&&d.getHours()<w.after){ w.prod=1; w.pending=true; } return w; }
+let WD=weekday();
+
+const EFF_TXT={prod:v=>"Production ×"+num(v),click:v=>"Clics ×"+num(v),auto:v=>"+"+v+" clic(s) auto/s",offEff:v=>"Hors-ligne +"+v+" pts d'efficacité",
+  offCap:v=>"+"+v+" h d'absence comptée",slots:v=>"+"+v+" emplacement de projet",projSpeed:v=>"Projets "+Math.round((1-v)*100)+" % plus courts",
+  projRew:v=>"Primes de projet ×"+num(v),xp:v=>"XP ×"+num(v),drop:v=>"Fournitures ×"+num(v)+" plus fréquentes",tickets:v=>"+"+v+" ticket(s) au pointage",
+  labs:v=>"+"+v+" recherche en parallèle",cost:v=>"Recrutements −"+Math.round((1-v)*100)+" %",luck:v=>"Tirages rares ×"+num(v),gold:v=>"Surprises ×"+num(v)+" plus fréquentes"};
+function descE(e){ return Object.keys(e).map(k=>EFF_TXT[k](e[k])).join(" · "); }
+
+const RESEARCH=[
+  {id:"t1",b:"Télétravail",n:"Charte télétravail",m:10,c:1,e:{offEff:5,offCap:4}},
+  {id:"t2",b:"Télétravail",n:"VPN qui marche (parfois)",m:60,c:2,req:["t1"],e:{offEff:5}},
+  {id:"t3",b:"Télétravail",n:"Visio sans micro coupé",m:240,c:3,req:["t2"],e:{offCap:8}},
+  {id:"t4",b:"Télétravail",n:"Laptop de fonction",m:720,c:5,req:["t3"],e:{offEff:5}},
+  {id:"t5",b:"Télétravail",n:"Bureau à la maison",m:1440,c:8,req:["t4"],e:{offEff:5,offCap:12}},
+  {id:"t6",b:"Télétravail",n:"Télétravail depuis Bali",m:4320,c:15,req:["t5"],e:{offEff:10,offCap:24}},
+  {id:"p1",b:"Process",n:"Templates PowerPoint",m:5,c:1,e:{prod:1.5}},
+  {id:"p2",b:"Process",n:"Lean management",m:30,c:1,req:["p1"],e:{prod:1.5}},
+  {id:"p3",b:"Process",n:"Agilité à l'échelle",m:120,c:2,req:["p2"],e:{prod:2}},
+  {id:"p4",b:"Process",n:"Transformation digitale",m:480,c:4,req:["p3"],e:{prod:2}},
+  {id:"p5",b:"Process",n:"Big data",m:1440,c:6,req:["p4"],e:{prod:3}},
+  {id:"p6",b:"Process",n:"IA de gouvernance",m:2880,c:10,req:["p5"],e:{prod:3}},
+  {id:"p7",b:"Process",n:"Singularité managériale",m:10080,c:25,req:["p6"],e:{prod:5}},
+  {id:"c1",b:"Poste de travail",n:"Ergonomie du poste",m:15,c:1,e:{click:2,auto:1}},
+  {id:"c2",b:"Poste de travail",n:"Souris sans fil",m:120,c:2,req:["c1"],e:{click:2,auto:2}},
+  {id:"c3",b:"Poste de travail",n:"Neuro-clic",m:720,c:5,req:["c2"],e:{click:3,auto:5}},
+  {id:"c4",b:"Poste de travail",n:"Implant de productivité",m:2880,c:10,req:["c3"],e:{click:5,auto:10}},
+  {id:"j1",b:"Projets",n:"Gestion de projet",m:20,c:1,e:{slots:1}},
+  {id:"j2",b:"Projets",n:"Diagramme de Gantt",m:180,c:3,req:["j1"],e:{projSpeed:0.85}},
+  {id:"j3",b:"Projets",n:"Chef de projet senior",m:600,c:5,req:["j2"],e:{slots:1,projRew:1.25}},
+  {id:"j4",b:"Projets",n:"PMO",m:2160,c:8,req:["j3"],e:{projSpeed:0.8,projRew:1.25}},
+  {id:"j5",b:"Projets",n:"Portefeuille de projets",m:5760,c:15,req:["j4"],e:{slots:1,projRew:1.5}},
+  {id:"k1",b:"Carrière",n:"Coaching",m:60,c:2,e:{xp:1.25}},
+  {id:"k2",b:"Carrière",n:"MBA en ligne",m:480,c:4,req:["k1"],e:{xp:1.25}},
+  {id:"k3",b:"Carrière",n:"Réseau d'anciens",m:1440,c:8,req:["k2"],e:{xp:1.5}},
+  {id:"k4",b:"Carrière",n:"Executive MBA",m:4320,c:15,req:["k3"],e:{xp:2}},
+  {id:"l1",b:"Services généraux",n:"Inventaire des fournitures",m:30,c:1,e:{drop:1.5}},
+  {id:"l2",b:"Services généraux",n:"Économat",m:360,c:3,req:["l1"],e:{tickets:1}},
+  {id:"l3",b:"Services généraux",n:"Deuxième labo",m:720,c:6,req:["l2"],e:{labs:1}},
+  {id:"l4",b:"Services généraux",n:"Centrale d'achats",m:1440,c:6,req:["l3"],e:{cost:0.9,drop:1.5}},
+  {id:"l5",b:"Services généraux",n:"Distributeur premium",m:2880,c:10,req:["l4"],e:{luck:1.5}},
+  {id:"l6",b:"Services généraux",n:"Comité d'entreprise",m:4320,c:12,req:["l5"],e:{tickets:2,gold:1.25}}
+];
+const RB_=Object.fromEntries(RESEARCH.map(r=>[r.id,r]));
+
+const RAR=[{n:"Commun",c:"var(--r0)"},{n:"Rare",c:"var(--r1)"},{n:"Épique",c:"var(--r2)"},{n:"Légendaire",c:"var(--r3)"}];
+const ITEMS=[
+  {id:"i01",r:0,n:"Agrafeuse beige",e:{prod:2}},{id:"i02",r:0,n:"Stylo quatre couleurs",e:{click:5}},{id:"i03",r:0,n:"Post-it jaune",e:{prod:2}},
+  {id:"i04",r:0,n:"Tasse « Meilleur collègue »",e:{offEff:0.2}},{id:"i05",r:0,n:"Trombone géant",e:{cost:0.5}},{id:"i06",r:0,n:"Badge visiteur",e:{gold:2}},
+  {id:"i07",r:0,n:"Plante verte en plastique",e:{prod:2}},{id:"i08",r:0,n:"Calculatrice solaire",e:{projRew:3}},{id:"i09",r:0,n:"Surligneur fluo",e:{xp:1}},
+  {id:"i10",r:0,n:"Tapis de souris ergonomique",e:{click:5}},{id:"i11",r:0,n:"Cordon de badge",e:{drop:3}},{id:"i12",r:0,n:"Gobelet de la machine",e:{prod:2}},
+  {id:"i13",r:1,n:"Chaise qui grince",e:{prod:5}},{id:"i14",r:1,n:"Clé USB 2 Go",e:{offCap:0.5}},{id:"i15",r:1,n:"Casque antibruit",e:{click:12}},
+  {id:"i16",r:1,n:"Mug isotherme",e:{offEff:0.4}},{id:"i17",r:1,n:"Carte de cantine",e:{tickets:0.2}},{id:"i18",r:1,n:"Agenda papier 2009",e:{projSpeed:1}},
+  {id:"i19",r:1,n:"Ventilateur USB",e:{gold:5}},{id:"i20",r:1,n:"Imprimante qui marche",e:{prod:6}},{id:"i21",r:1,n:"Classeur à levier",e:{xp:3}},
+  {id:"i22",r:2,n:"Fauteuil du DG",e:{prod:12}},{id:"i23",r:2,n:"Machine à café perso",e:{offEff:0.8}},{id:"i24",r:2,n:"Clé du local à fournitures",e:{drop:10}},
+  {id:"i25",r:2,n:"Badge toutes zones",e:{xp:6}},{id:"i26",r:2,n:"Télécommande de la clim",e:{projRew:10}},{id:"i27",r:2,n:"Ordinateur portable neuf",e:{click:30}},
+  {id:"i28",r:2,n:"Carte resto d'entreprise",e:{tickets:0.5}},
+  {id:"i29",r:3,n:"L'Agrafeuse Rouge",e:{prod:30}},{id:"i30",r:3,n:"Place de parking réservée",e:{offEff:1.5,offCap:1}},
+  {id:"i31",r:3,n:"Bureau d'angle avec vue",e:{prod:20,xp:10}},{id:"i32",r:3,n:"Carte de visite dorée",e:{tickets:1,projRew:10}}
+];
+const ITEM_TXT={prod:v=>"+"+num(v)+" % prod",click:v=>"+"+num(v)+" % clics",offEff:v=>"+"+num(v)+" pt hors-ligne",offCap:v=>"+"+num(v)+" h d'absence",
+  cost:v=>"−"+num(v)+" % recrutements",gold:v=>"+"+num(v)+" % surprises",projRew:v=>"+"+num(v)+" % primes projet",xp:v=>"+"+num(v)+" % XP",
+  drop:v=>"+"+num(v)+" % fournitures",tickets:v=>"+"+num(v)+" ticket/pointage",projSpeed:v=>"−"+num(v)+" % durée projets"};
+function itemDesc(e,L){ return Object.keys(e).map(k=>ITEM_TXT[k](e[k]*L)).join(", "); }
+
+function ltFresh(){ return {tickets:0,done:{},labs:[],proj:[],offers:[],items:{},pulls:0,pity:0,streak:0,best:0,lastBadge:0,rtt:1,today:null,
+  daysPlayed:0,lastDay:0,projDone:0,offTotal:0,legendaries:0}; }
+function ltBonus(L){
+  const b={prod:1,click:1,offEff:0,offCap:0,slots:0,projSpeed:1,projRew:1,xp:1,drop:1,tickets:0,cost:1,gold:1,auto:0,labs:0,luck:1};
+  const add=["offEff","offCap","slots","tickets","auto","labs"];
+  RESEARCH.forEach(r=>{ if(L.done[r.id]) for(const k in r.e){ if(add.includes(k)) b[k]+=r.e[k]; else b[k]*=r.e[k]; } });
+  const is={}; ITEMS.forEach(it=>{ const lv=L.items[it.id]||0; if(lv) for(const k in it.e) is[k]=(is[k]||0)+it.e[k]*lv; });
+  const g=k=>is[k]||0;
+  b.prod*=1+g("prod")/100; b.click*=1+g("click")/100; b.offEff+=g("offEff"); b.offCap+=g("offCap"); b.projRew*=1+g("projRew")/100;
+  b.projSpeed*=1-Math.min(g("projSpeed"),30)/100; b.xp*=1+g("xp")/100; b.drop*=1+g("drop")/100; b.gold*=1+g("gold")/100;
+  b.cost*=1-Math.min(g("cost"),30)/100; b.tickets+=Math.min(5,Math.floor(g("tickets")));
+  b.seniority=Math.min(L.daysPlayed||0,365)*0.01; b.prod*=1+b.seniority;
+  return b;
+}
+ACH.push(
+  ["Premier badge",s=>s.lt.best>=1],["Une semaine sans rater",s=>s.lt.best>=7],["Un mois de présence",s=>s.lt.best>=30],["Pilier de l'entreprise",s=>s.lt.best>=100],
+  ["Ancienneté : 7 jours",s=>s.lt.daysPlayed>=7],["Ancienneté : 30 jours",s=>s.lt.daysPlayed>=30],["Ancienneté : 100 jours",s=>s.lt.daysPlayed>=100],
+  ["Premier projet livré",s=>s.lt.projDone>=1],["Chef de projet",s=>s.lt.projDone>=25],["Directeur de programme",s=>s.lt.projDone>=150],
+  ["Première découverte",s=>Object.keys(s.lt.done).length>=1],["Labo en ébullition",s=>Object.keys(s.lt.done).length>=10],["Prix Nobel du tertiaire",s=>Object.keys(s.lt.done).length>=RESEARCH.length],
+  ["Fouilleur de tiroirs",s=>Object.keys(s.lt.items).length>=10],["Collection complète",s=>Object.keys(s.lt.items).length>=ITEMS.length],
+  ["Objet légendaire",s=>s.lt.legendaries>=1],["Tout au niveau 10",s=>ITEMS.every(it=>(s.lt.items[it.id]||0)>=10)]
+);
+
 /* ---------- State ---------- */
-const KEY="openspace-tycoon-v2";
-const PERSIST=["allTime","ach","xp","tokens","perks","resets","goldens","bossOpens","played","clicks","questsDone","maxCombo","bestRate","pseudo"];
+const KEY="openspace-tycoon-v2"; // même clé : les anciennes parties sont migrées
+const PERSIST=["allTime","ach","xp","tokens","perks","resets","goldens","bossOpens","played","clicks","questsDone","maxCombo","bestRate","pseudo",
+  "xpEarned","ascBase","perkLv","shares","sharesEarned","founder","ascensions","xpLifetime","version","lastRunTotal","lt"];
 function fresh(keep){
   const owned={}; H.forEach(h=>owned[h.id]=0);
   const s={tasks:0,total:0,allTime:0,clicks:0,owned,upg:[],ach:[],xp:0,tokens:0,perks:[],resets:0,goldens:0,bossOpens:0,played:0,
-    questsDone:0,maxCombo:0,bestRate:0,quests:[],questSkip:0,last:Date.now(),savedAt:0};
+    questsDone:0,maxCombo:0,bestRate:0,quests:[],questSkip:0,last:Date.now(),savedAt:0,
+    version:3,xpEarned:0,ascBase:0,perkLv:{},shares:0,sharesEarned:0,founder:[],ascensions:0,xpLifetime:0,lastRunTotal:0,lt:ltFresh()};
   if(keep) PERSIST.forEach(k=>{ if(keep[k]!==undefined) s[k]=keep[k]; });
   return s;
 }
+let migrated=false;
 function normalize(d){
+  const old = d && !d.version;
   const s=Object.assign(fresh(),d||{});
+  if(!s.perkLv||typeof s.perkLv!=="object"||Array.isArray(s.perkLv)) s.perkLv={};
+  if(!Array.isArray(s.founder)) s.founder=[];
+  s.lt=Object.assign(ltFresh(),(s.lt&&typeof s.lt==="object")?s.lt:{});
+  ["done","items"].forEach(k=>{ if(!s.lt[k]||typeof s.lt[k]!=="object"||Array.isArray(s.lt[k])) s.lt[k]={}; });
+  ["labs","proj","offers"].forEach(k=>{ if(!Array.isArray(s.lt[k])) s.lt[k]=[]; });
+  if(old){
+    // v2 -> v3 : l'ancienne XP était déséquilibrée. On recalcule l'XP sur la carrière (plafonnée) et on rend un nouveau poste.
+    const xp=Math.min(Math.floor(Math.cbrt((s.allTime||0)/1e10)),200);
+    const owned={}; H.forEach(h=>owned[h.id]=0);
+    Object.assign(s,{version:3,xp:xp,xpEarned:xp,xpLifetime:xp,tokens:xp,perks:[],perkLv:{},ascBase:Math.pow(xp,3)*1e10,
+      tasks:0,total:0,owned:owned,upg:[],quests:[]});
+    migrated=true;
+  }
   H.forEach(h=>{ if(typeof s.owned[h.id]!=="number") s.owned[h.id]=0; });
   ["upg","ach","perks","quests"].forEach(k=>{ if(!Array.isArray(s[k])) s[k]=[]; });
   s.upg=s.upg.filter(id=>UB[id]);
@@ -371,7 +776,8 @@ function normalize(d){
 let S=fresh();
 try{ const raw=localStorage.getItem(KEY)||localStorage.getItem("openspace-tycoon-v1"); if(raw) S=normalize(JSON.parse(raw)); }catch(e){}
 
-const has=p=>S.perks.includes(p);
+const has=p=>S.perks.includes(p)||S.founder.includes(p);
+const lv=id=>(S.perkLv&&S.perkLv[id])||0;
 let buffs=[]; // {name, kind:'prod'|'click'|'cost', mult, until}
 let combo=0, lastClick=0;
 let M;
@@ -379,24 +785,27 @@ function mods(){
   const m={mult:{},clickMult:1,clickPct:0,global:1,syn:[]};
   H.forEach(h=>m.mult[h.id]=1);
   S.upg.forEach(id=>UB[id]&&UB[id].apply(m));
-  m.global*=(1+S.xp*0.05)*(1+S.ach.length*(has("amb")?0.02:0.01))*(has("ceo")?2:1);
+  const achPer=has("board")?0.03:has("amb")?0.02:0.01;
+  m.global*=(1+S.xp*0.01)*(1+S.ach.length*achPer)*(has("ceo")?2:1)*(has("adj")?3:1)*(1+0.1*lv("form"))*(1+0.25*S.sharesEarned)
+    *(has("f_stationf")?5:1)*(has("f_ipo")?10:1)*(has("f_empire")?100:1)*(has("f_legend")?1000:1);
+  m.lt=ltBonus(S.lt); m.global*=m.lt.prod;
   return m;
 }
 M=mods();
 function buffMult(kind){ let x=1; const now=Date.now(); buffs.forEach(b=>{ if(b.kind===kind&&b.until>now) x*=b.mult; }); return x; }
 function prodOf(h){
   let p=h.rate*M.mult[h.id];
-  M.syn.forEach(([a,b,pc])=>{ if(a===h.id) p*=1+S.owned[b]*pc; });
+  M.syn.forEach(([a,b,pc])=>{ if(a===h.id) p*=1+S.owned[b]*pc*(has("fusion")?2:1); });
   return p*M.global;
 }
-function rate(){ let r=0; H.forEach(h=>r+=prodOf(h)*S.owned[h.id]); return r*buffMult("prod"); }
-function comboMult(){ const max=has("combo")?5:3; return 1+Math.min(combo,50)/50*(max-1); }
-function clickVal(){ return (M.clickMult+rate()*M.clickPct)*(1+S.xp*0.05)*buffMult("click")*comboMult(); }
-function unitCost(h,k){ return h.base*Math.pow(1.15,k)*(has("nego")?0.9:1)*buffMult("cost"); }
+function rate(){ let r=0; H.forEach(h=>r+=prodOf(h)*S.owned[h.id]); return r*buffMult("prod")*(WD.prod||1); }
+function comboMult(){ const max=has("f_unicorn")?8:has("combo")?5:3; return 1+Math.min(combo,50)/50*(max-1); }
+function clickVal(){ return (M.clickMult+rate()*M.clickPct)*(1+S.xp*0.01)*(1+0.25*lv("dext"))*(has("f_unicorn")?10:1)*M.lt.click*(WD.click||1)*buffMult("click")*comboMult(); }
+function unitCost(h,k){ return h.base*Math.pow(1.15,k)*(has("nego")?0.9:1)*(has("clone")?0.75:1)*(1-0.02*lv("nego2"))*M.lt.cost*buffMult("cost"); }
 function costN(h,n){ const o=S.owned[h.id]; const r=1.15; return unitCost(h,o)*(Math.pow(r,n)-1)/(r-1); }
 function maxAfford(h){ const u=unitCost(h,S.owned[h.id]); let n=Math.floor(Math.log(S.tasks*0.15/u+1)/Math.log(1.15)); n=Math.max(0,Math.min(n,1000)); while(n>0&&costN(h,n)>S.tasks) n--; return n; }
 
-const units=[[1e33,"Dc"],[1e30,"No"],[1e27,"Oc"],[1e24,"Sp"],[1e21,"Sx"],[1e18,"Qi"],[1e15,"Qa"],[1e12,"T"],[1e9,"Md"],[1e6,"M"],[1e3,"k"]];
+const units=[[1e45,"Qad"],[1e42,"Td"],[1e39,"Dd"],[1e36,"Ud"],[1e33,"Dc"],[1e30,"No"],[1e27,"Oc"],[1e24,"Sp"],[1e21,"Sx"],[1e18,"Qi"],[1e15,"Qa"],[1e12,"T"],[1e9,"Md"],[1e6,"M"],[1e3,"k"]];
 function fmt(n){
   if(!isFinite(n)) return "∞";
   if(n<1000) return (n<10 && n%1) ? n.toFixed(1).replace(".",",") : Math.floor(n).toLocaleString("fr-FR");
@@ -406,12 +815,13 @@ function fmt(n){
 function gain(n){ S.tasks+=n; S.total+=n; S.allTime+=n; }
 const $=id=>document.getElementById(id);
 function esc(t){ return String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; $("toasts").appendChild(t); setTimeout(()=>t.remove(),3500); }
+function toast(msg){ const box=$("toasts"); while(box.children.length>=4) box.firstElementChild.remove();
+  const t=document.createElement("div"); t.className="toast"; t.textContent=msg; box.appendChild(t); setTimeout(()=>t.remove(),Math.min(9000,3500+msg.length*25)); }
 
 /* ---------- Clicking ---------- */
 function doClick(x,y,auto){
   const now=Date.now();
-  if(!auto){ combo = (now-lastClick<450) ? combo+1 : Math.max(0,combo-3); lastClick=now; S.maxCombo=Math.max(S.maxCombo,combo); }
+  if(!auto){ combo = (now-lastClick<450) ? combo+1 : Math.max(0,combo-3); lastClick=now; S.maxCombo=Math.max(S.maxCombo,combo); const td=TD(); td.clicks++; td.combo=Math.max(td.combo,combo); }
   let v=clickVal(), crit=false;
   if(has("crit") && Math.random()<0.05){ v*=10; crit=true; }
   gain(v); S.clicks++;
@@ -432,12 +842,15 @@ let buyN=1;
 $("buymode").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
   buyN = b.dataset.n==="max" ? "max" : +b.dataset.n;
   $("buymode").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderHires(); });
-H.forEach(h=>{
+const ICO=["#2450d6","#b5651d","#12805c","#1f7a4d","#7a3fd0","#0f8a8a","#cf3a3a","#4b4fd1","#b8860b","#d23f88","#2f6fa8","#5b6270","#a8325e","#0f6e7e","#5d3bb5","#9a6a12","#e06d10","#2a2d35","#3a7bff","#8e2bd1"];
+H.forEach((h,i)=>{
   const b=document.createElement("button"); b.className="row"; b.id="h-"+h.id;
+  b.dataset.ini=h.name.split(/[\s«»'’-]+/).filter(w=>w.length>2).slice(0,2).map(w=>w[0].toUpperCase()).join("");
+  b.style.setProperty("--ico",ICO[i%ICO.length]);
   b.innerHTML=`<div class="name">${h.name}</div><div class="owned"></div><div class="desc">${h.desc}</div><div class="meta"><span class="cost c1"></span><span class="cost c2" style="color:var(--ink-soft)"></span></div>`;
   b.addEventListener("click",()=>{
     const n = buyN==="max" ? maxAfford(h) : buyN; if(n<1) return;
-    const c=costN(h,n); if(S.tasks>=c){ S.tasks-=c; S.owned[h.id]+=n; renderAll(true); }
+    const c=costN(h,n); if(S.tasks>=c){ S.tasks-=c; S.owned[h.id]+=n; TD().hires+=n; renderAll(true); }
   });
   $("hireList").appendChild(b);
 });
@@ -457,7 +870,7 @@ function renderHires(){
 
 /* ---------- Upgrades ---------- */
 function availUpg(){ return U.filter(u=>!S.upg.includes(u.id)&&u.req(S)); }
-function buyUpg(u){ if(S.tasks>=u.cost&&!S.upg.includes(u.id)){ S.tasks-=u.cost; S.upg.push(u.id); M=mods(); return true; } return false; }
+function buyUpg(u){ if(S.tasks>=u.cost&&!S.upg.includes(u.id)){ S.tasks-=u.cost; S.upg.push(u.id); M=mods(); TD().upg++; return true; } return false; }
 let upgKey="";
 function renderUpg(force){
   const av=availUpg().slice(0,24);
@@ -501,14 +914,14 @@ function renderQuests(force){
   if(!force && key===questKey) return; questKey=key;
   const el=$("questList"); el.innerHTML="";
   S.quests.forEach((q,i)=>{
-    const p=Math.min(1,qProg(q)/q.target), done=p>=1, rw=q.reward*(has("bonus")?3:1);
+    const p=Math.min(1,qProg(q)/q.target), done=p>=1, rw=q.reward*(has("bonus")?3:1)*(1+0.25*lv("deleg"));
     const d=document.createElement("div"); d.className="quest";
     d.innerHTML=`<div class="top"><b>${esc(q.label)}</b><span class="cost">Prime : ${fmt(rw)}</span></div>
       <div class="qbar"><i style="width:${(p*100).toFixed(1)}%"></i></div>
       <div class="btns"><button class="btn">${done?"Encaisser la prime":"En cours"}</button><button class="btn soft">Reporter</button></div>`;
     const [bc,bs]=d.querySelectorAll("button");
     bc.disabled=!done;
-    bc.addEventListener("click",()=>{ if(Math.min(1,qProg(q)/q.target)<1) return; gain(rw); S.questsDone++; S.quests.splice(i,1); fillQuests(); toast("Prime encaissée : +"+fmt(rw)); renderAll(true); });
+    bc.addEventListener("click",()=>{ if(Math.min(1,qProg(q)/q.target)<1) return; gain(rw); S.questsDone++; TD().quests++; S.quests.splice(i,1); fillQuests(); toast("Prime encaissée : +"+fmt(rw)); renderAll(true); });
     bs.disabled=Date.now()-S.questSkip<60000;
     bs.addEventListener("click",()=>{ S.questSkip=Date.now(); S.quests.splice(i,1); fillQuests(); renderAll(true); });
     el.appendChild(d);
@@ -517,41 +930,84 @@ function renderQuests(force){
 function readyQuests(){ return S.quests.filter(q=>qProg(q)>=q.target).length; }
 
 /* ---------- Prestige & perks ---------- */
-function xpTotalFor(t){ return Math.floor(Math.sqrt(t/1e6)*(has("mentor")?1.5:1)); }
-function xpGain(){ return xpTotalFor(S.total); }
+const XPDIV=1e10;
+function xpMult(){ return (has("mentor")?1.5:1)*(1+0.1*lv("xpb"))*(has("ghost")?2:1)*(has("f_pitch")?2:1)*(has("f_ipo")?3:1)*(has("f_legend")?5:1)*M.lt.xp; }
+function xpPossible(extra){ return Math.floor(Math.cbrt((S.ascBase+S.total+(extra||0))/XPDIV)*xpMult()); }
+function xpGain(){ return Math.max(0,xpPossible()-S.xpEarned); }
+function xpNeedFor(target){ return Math.pow(target/xpMult(),3)*XPDIV-S.ascBase; }
+function tokenGain(g){ return g*(has("f_angel")?2:1); }
+function sharesPossible(){ return Math.floor(Math.sqrt(S.xpLifetime/500)); }
+function sharesGain(){ return Math.max(0,sharesPossible()-S.sharesEarned); }
+function lvCost(L){ return Math.ceil(L.base*Math.pow(L.growth,lv(L.id))); }
+function newRunState(old){
+  const s=fresh(old);
+  if(has("para")) s.tasks=old.total*0.01;
+  if(has("net")){ s.owned.stag=10; s.owned.cafe=5; }
+  return s;
+}
 $("quit").addEventListener("click",()=>{ $("quitYes").hidden=false; });
 $("quitYes").addEventListener("click",()=>{
   const g=xpGain(); if(g<1) return;
-  const keepClick = has("keepu") ? S.upg.filter(id=>UB[id].kind==="c") : [];
-  const old=S; S=fresh(old); S.xp+=g; S.tokens+=g; S.resets++; S.upg=keepClick;
-  if(has("net")){ S.owned.stag=10; S.owned.cafe=5; }
-  M=mods(); fillQuests(); $("quitYes").hidden=true; toast("Nouveau poste ! +"+g+" XP"); saveAll(true); renderAll(true);
+  const keepClick = has("keepu") ? S.upg.filter(id=>UB[id]&&UB[id].kind==="c") : [];
+  const tg=tokenGain(g), old=S;
+  old.ascBase+=old.total; old.xpEarned+=g; old.xp=old.xpEarned; old.xpLifetime+=g; old.tokens+=tg; old.resets++; old.lastRunTotal=old.total;
+  S=newRunState(old); S.upg=keepClick;
+  M=mods(); fillQuests(); $("quitYes").hidden=true; toast("Nouveau poste ! +"+g+" XP, +"+tg+" ligne(s) de CV"); saveAll(true); renderAll(true);
 });
+$("ascend").addEventListener("click",()=>{ $("ascendYes").hidden=false; });
+$("ascendYes").addEventListener("click",()=>{
+  const g=sharesGain(); if(g<1) return;
+  const keepPerks = has("f_keep") ? S.perks.slice() : [];
+  const old=S; old.shares+=g; old.sharesEarned+=g; old.ascensions++;
+  old.xp=0; old.xpEarned=0; old.ascBase=0; old.tokens=0; old.perks=keepPerks; old.perkLv={}; old.lastRunTotal=0;
+  S=fresh(old); M=mods(); fillQuests(); $("ascendYes").hidden=true;
+  toast("Ta boîte est créée ! +"+g+" part(s) de fondateur"); saveAll(true); renderAll(true);
+});
+function perkCard(name,desc,costTxt,state,onBuy){
+  const b=document.createElement("button"); b.className="perk"+(state==="got"?" got":""); b.disabled=state!=="buy";
+  b.innerHTML=`<span class="name">${esc(name)}</span><span class="desc">${esc(desc)}</span><span class="cost">${esc(costTxt)}</span>`;
+  b.addEventListener("click",()=>{ if(!b.disabled) onBuy(); });
+  return b;
+}
 function renderCV(){
   const g=xpGain(); $("xpgain").textContent=g; $("quit").disabled=g<1; $("tokens").textContent=S.tokens;
-  const need=Math.pow((g+1)/(has("mentor")?1.5:1),2)*1e6;
-  $("xpNext").textContent="Prochain point d'XP à "+fmt(need)+" tâches dans ce poste";
+  $("xpNext").textContent="Prochain point d'XP à "+fmt(Math.max(0,xpNeedFor(S.xpEarned+g+1)))+" tâches dans ce poste (tu en as "+fmt(S.total)+")";
+  $("xpNow").textContent=S.xp+" XP, soit +"+S.xp+" % de production";
   const el=$("perkList"); el.innerHTML="";
-  PERKS.forEach(p=>{
-    const got=has(p.id), b=document.createElement("button");
-    b.className="perk"+(got?" got":""); b.disabled=got||S.tokens<p.cost;
-    b.innerHTML=`<span class="name">${esc(p.name)}</span><span class="desc">${esc(p.desc)}</span><span class="cost">${got?"Acquis":p.cost+" ligne(s) de CV"}</span>`;
-    b.addEventListener("click",()=>{ if(!got&&S.tokens>=p.cost){ S.tokens-=p.cost; S.perks.push(p.id); M=mods(); fillQuests(); toast("Compétence acquise : "+p.name); renderAll(true); } });
-    el.appendChild(b);
-  });
+  PERKS.forEach(p=>{ const got=has(p.id);
+    el.appendChild(perkCard(p.name,p.desc,got?"Acquis":p.cost+" ligne(s)",got?"got":S.tokens>=p.cost?"buy":"no",()=>{
+      S.tokens-=p.cost; S.perks.push(p.id); M=mods(); fillQuests(); toast("Compétence acquise : "+p.name); renderAll(true); })); });
+  const el2=$("levelList"); el2.innerHTML="";
+  LEVELS.forEach(L=>{ const n=lv(L.id), c=lvCost(L), maxed=L.max&&n>=L.max;
+    el2.appendChild(perkCard(L.name+" · niv. "+n+(L.max?" / "+L.max:""),L.desc,maxed?"Niveau max":c+" ligne(s)",maxed?"got":S.tokens>=c?"buy":"no",()=>{
+      S.tokens-=c; S.perkLv[L.id]=n+1; M=mods(); renderAll(true); })); });
+  // fondation
+  const sg=sharesGain(), showAsc=S.xpLifetime>=50||S.sharesEarned>0;
+  $("ascBox").hidden=!showAsc;
+  if(showAsc){
+    $("sharesgain").textContent=sg; $("ascend").disabled=sg<1; $("shares").textContent=S.shares;
+    $("sharesNow").textContent=S.sharesEarned+" part(s) détenue(s), soit +"+(S.sharesEarned*25)+" % de production";
+    const nextXp=Math.pow(sharesPossible()+1,2)*500;
+    $("sharesNext").textContent="Prochaine part à "+fmt(nextXp)+" XP gagnée depuis ta dernière boîte (tu en as "+fmt(S.xpLifetime)+")";
+    const el3=$("founderList"); el3.innerHTML="";
+    FOUNDER.forEach(p=>{ const got=S.founder.includes(p.id);
+      el3.appendChild(perkCard(p.name,p.desc,got?"Acquis":p.cost+" part(s)",got?"got":S.shares>=p.cost?"buy":"no",()=>{
+        S.shares-=p.cost; S.founder.push(p.id); M=mods(); toast("Atout de fondateur : "+p.name); renderAll(true); })); });
+  }
 }
 
 /* ---------- Stats & achievements ---------- */
 function rankName(){ let n=RANKS[0][1]; RANKS.forEach(([v,t])=>{ if(S.allTime>=v) n=t; }); return n; }
 function checkAch(){
   let any=false;
-  ACH.forEach(([n,f])=>{ if(!S.ach.includes(n)&&f(S)){ S.ach.push(n); toast("Trophée : "+n); any=true; } });
+  const got=[]; ACH.forEach(([n,f])=>{ if(!S.ach.includes(n)&&f(S)){ S.ach.push(n); got.push(n); any=true; } });
+  if(got.length>2) toast(got.length+" trophées débloqués : "+got.slice(0,3).join(", ")+"…"); else got.forEach(n=>toast("Trophée : "+n));
   if(any) M=mods();
 }
 function renderStats(){
   const t=Math.floor(S.played), h=Math.floor(t/3600), m=Math.floor(t%3600/60);
   $("stats").innerHTML=[["Dans ce poste",fmt(S.total)],["Toute la carrière",fmt(S.allTime)],["Record /s",fmt(S.bestRate)],["Clics",fmt(S.clicks)],
-    ["Expérience",S.xp+" XP (+"+(S.xp*5)+" %)"],["Démissions",S.resets],["Objectifs remplis",S.questsDone],["Surprises attrapées",S.goldens],
+    ["Expérience",S.xp+" XP (+"+S.xp+" %)"],["XP sur la carrière",fmt(S.xpLifetime)],["Démissions",S.resets],["Boîtes créées",S.ascensions],["Parts de fondateur",S.sharesEarned],["Objectifs remplis",S.questsDone],["Surprises attrapées",S.goldens],
     ["Meilleur combo",S.maxCombo],["Temps « travaillé »",h+" h "+String(m).padStart(2,"0")]].map(([a,b])=>`<div>${a}<b>${b}</b></div>`).join("");
   $("achCount").textContent=S.ach.length+" / "+ACH.length+" débloqués.";
   $("ach").innerHTML=ACH.map(([n])=>`<span class="${S.ach.includes(n)?"got":""}">${esc(n)}</span>`).join("");
@@ -559,34 +1015,302 @@ function renderStats(){
 
 /* ---------- Golden surprises ---------- */
 function spawnGolden(){
-  const dur=has("charm")?2:1;
+  const dur=has("charm")?2:1, gp=has("hotline")?2:1;
   const kinds=[
-    [4,"Mail du DG : « Bravo à tous »",()=>{ buffs.push({name:"Motivation ×7",kind:"prod",mult:7,until:Date.now()+30000*dur}); }],
-    [4,"Prime exceptionnelle !",()=>{ const v=Math.max(rate()*900,S.tasks*0.15,50); gain(v); toast("Prime : +"+fmt(v)); }],
-    [3,"Café offert par le boss",()=>{ buffs.push({name:"Clics ×77",kind:"click",mult:77,until:Date.now()+13000*dur}); }],
+    [4,"Mail du DG : « Bravo à tous »",()=>{ buffs.push({name:"Motivation ×"+7*gp,kind:"prod",mult:7*gp,until:Date.now()+30000*dur}); }],
+    [4,"Prime exceptionnelle !",()=>{ const v=Math.max(rate()*900,S.tasks*0.15,50)*gp; gain(v); toast("Prime : +"+fmt(v)); }],
+    [3,"Café offert par le boss",()=>{ buffs.push({name:"Clics ×"+77*gp,kind:"click",mult:77*gp,until:Date.now()+13000*dur}); }],
     [2,"Soldes chez le cabinet de recrutement",()=>{ buffs.push({name:"Recrutements −50 %",kind:"cost",mult:0.5,until:Date.now()+20000*dur}); }],
-    [1,"Fusion-acquisition éclair",()=>{ buffs.push({name:"Frénésie ×77",kind:"prod",mult:77,until:Date.now()+8000*dur}); }],
+    [1,"Fusion-acquisition éclair",()=>{ buffs.push({name:"Frénésie ×"+77*gp,kind:"prod",mult:77*gp,until:Date.now()+8000*dur}); }],
     [1,"Panne du VPN (clique quand même)",()=>{ buffs.push({name:"Panne VPN ×0,5",kind:"prod",mult:0.5,until:Date.now()+15000}); toast("Aïe, le VPN est tombé. Ça repart dans 15 s.");},true]
   ];
   let tot=kinds.reduce((a,k)=>a+k[0],0), r=Math.random()*tot, pick=kinds[0];
   for(const k of kinds){ r-=k[0]; if(r<=0){ pick=k; break; } }
   const g=document.createElement("button"); g.className="golden"+(pick[3]?" bad":""); g.textContent=pick[1];
   g.style.left=Math.max(16,Math.random()*(innerWidth-260))+"px"; g.style.top=(80+Math.random()*Math.max(60,innerHeight-200))+"px";
-  g.addEventListener("click",()=>{ pick[2](); S.goldens++; g.remove(); renderAll(); });
+  g.addEventListener("click",()=>{ pick[2](); S.goldens++; TD().golden++; g.remove(); renderAll(); });
   document.body.appendChild(g); setTimeout(()=>g.remove(),10000);
 }
-(function sched(){ const base=has("gold")?25000:50000; setTimeout(()=>{ if(!document.hidden && $("boss").hidden) spawnGolden(); sched(); }, base+Math.random()*base*1.4); })();
+(function sched(){ const base=(has("gold")?25000:50000)/(1+0.05*lv("flair"))/M.lt.gold/(WD.gold||1); setTimeout(()=>{ if(!document.hidden && $("boss").hidden) spawnGolden(); sched(); }, base+Math.random()*base*1.4); })();
 
 /* ---------- Ticker ---------- */
 let ni=Math.floor(Math.random()*NEWS.length);
 function news(){ $("ticker").innerHTML=NEWS[ni++%NEWS.length]; }
 news(); setInterval(news,9000);
 
+/* ---------- Long terme : logique ---------- */
+const CHAL=[
+  {t:"clicks",l:n=>"Valider "+n+" tâches à la main",r:[300,1200]},
+  {t:"hires",l:n=>"Recruter "+n+" personnes",r:[25,120]},
+  {t:"golden",l:n=>"Intercepter "+n+" messages de la Direction",r:[2,4]},
+  {t:"proj",l:n=>"Récupérer "+n+" projet(s)",r:[1,3]},
+  {t:"quests",l:n=>"Remplir "+n+" objectifs du trimestre",r:[2,6]},
+  {t:"combo",l:n=>"Atteindre un combo café de "+n,r:[20,40]},
+  {t:"upg",l:n=>"Acheter "+n+" améliorations",r:[5,20]},
+  {t:"pulls",l:n=>"Utiliser le distributeur "+n+" fois",r:[1,2]}
+];
+function genDaily(d){ const R=rng(hashStr("ost-"+d)), pool=CHAL.slice(), out=[];
+  while(out.length<3){ const c=pool.splice(Math.floor(R()*pool.length),1)[0]; out.push({t:c.t,target:Math.round(c.r[0]+R()*(c.r[1]-c.r[0])),claimed:false}); }
+  return out; }
+function ensureToday(){
+  const d=dayNum(Date.now()), L=S.lt;
+  if(!L.today||L.today.day!==d){
+    L.today={day:d,clicks:0,hires:0,golden:0,proj:0,quests:0,combo:0,upg:0,pulls:0,list:genDaily(d),perfect:false};
+    if(L.lastDay!==d){ L.daysPlayed++; L.lastDay=d; M=mods(); }
+    if(!L.welcome){ L.welcome=1; L.tickets+=3; setTimeout(()=>toast("Kit de bienvenue : 3 tickets resto. Lance ta première recherche dans l'onglet R&D !"),1200); }
+  }
+}
+function TD(){ ensureToday(); return S.lt.today; }
+function chalLabel(c){ return CHAL.find(x=>x.t===c.t).l(c.target); }
+function chalReward(){ return 2+(WD.chal||0); }
+
+/* Pointeuse */
+function canBadge(){ return S.lt.lastBadge!==dayNum(Date.now()); }
+function badge(){
+  const L=S.lt, d=dayNum(Date.now()); if(!canBadge()) return;
+  const gap=d-L.lastBadge; let note="";
+  if(L.lastBadge&&gap===1) L.streak++;
+  else if(L.lastBadge&&gap>=2&&gap<=1+L.rtt){ L.rtt-=gap-1; L.streak++; note=" Ta série est sauvée par "+(gap-1)+" jour(s) de RTT."; }
+  else { if(L.streak>1) note=" Ta série de "+L.streak+" jours est perdue."; L.streak=1; }
+  if(L.streak%7===0) L.rtt=Math.min(2,L.rtt+1);
+  L.best=Math.max(L.best,L.streak); L.lastBadge=d;
+  const tk=2+Math.floor(Math.min(L.streak,30)/5)+M.lt.tickets; L.tickets+=tk;
+  buffs.push({name:"Café du matin ×2",kind:"prod",mult:2,until:Date.now()+15*MIN});
+  let extra="";
+  if(L.streak%7===0){ const res=pullItem(1.5,1); extra=" Colis de la semaine : "+res.it.n+"."; }
+  toast("Badgé ! Série de "+L.streak+" jour(s), +"+tk+" tickets resto, café du matin ×2 pendant 15 min."+extra+note);
+  renderAll(true);
+}
+
+/* Fournitures */
+let lastPulls=[];
+function pullItem(luck,minR){
+  const L=S.lt; L.pity++; L.pulls++;
+  const lk=luck*M.lt.luck, w=[62,28,8.5*lk,1.5*lk]; let r;
+  if(L.pity>=60) r=3; else { let x=Math.random()*w.reduce((a,b)=>a+b); for(r=0;r<3;r++){ x-=w[r]; if(x<=0) break; } }
+  r=Math.max(r,minR||0); if(r===3){ L.pity=0; L.legendaries++; }
+  const pool=ITEMS.filter(it=>it.r===r), it=pool[Math.floor(Math.random()*pool.length)];
+  const cur=L.items[it.id]||0; let refund=0;
+  if(cur>=10){ refund=1+r; L.tickets+=refund; } else L.items[it.id]=cur+1;
+  M=mods(); return {it,lvl:L.items[it.id],refund,isNew:cur===0};
+}
+function doPull(n){
+  const cost=n===10?27:3; if(S.lt.tickets<cost) return;
+  S.lt.tickets-=cost; lastPulls=[];
+  for(let i=0;i<n;i++) lastPulls.push(pullItem(1,(n===10&&i===n-1)?2:0));
+  TD().pulls+=n; itemsKey=""; renderAll(true);
+}
+
+/* Projets */
+const PROJ_NAMES=["Migration vers le cloud","Refonte de l'intranet","Audit qualité ISO 9001","Appel d'offres public","Déménagement du 3e étage","Séminaire de rentrée",
+  "Rapport annuel","Mise en conformité RGPD","Projet transverse sans budget","POC blockchain","Plan de continuité d'activité","Salon professionnel à Lyon",
+  "Comité de pilotage du comité","Nouvelle charte graphique","Changement de logiciel de notes de frais","Inventaire du parc informatique","Benchmark des concurrents",
+  "Refonte des process RH","Lancement d'une newsletter interne","Optimisation des salles de réunion","Cartographie des risques","Plan stratégique à 5 ans",
+  "Remplacement de la machine à café","Formation obligatoire en ligne"];
+const PT=[{m:15,f:.02,tk:.1,drop:.12},{m:30,f:.022,tk:.2,drop:.2},{m:60,f:.025,tk:.35,drop:.3},{m:120,f:.028,tk:.6,drop:.4},
+  {m:240,f:.032,tk:1,drop:.55},{m:480,f:.037,tk:1.5,drop:.7},{m:720,f:.042,tk:2,drop:.85},{m:1440,f:.05,tk:3,drop:1}];
+function newOffer(){ const w=[3,3,3,2.5,2,1.5,1,1]; let x=Math.random()*w.reduce((a,b)=>a+b), t=0; for(;t<w.length-1;t++){ x-=w[t]; if(x<=0) break; }
+  return {n:PROJ_NAMES[Math.floor(Math.random()*PROJ_NAMES.length)],t}; }
+function fillOffers(){ while(S.lt.offers.length<4) S.lt.offers.push(newOffer()); }
+function slots(){ return 2+M.lt.slots; }
+function projDurMs(t){ return PT[t].m*MIN*M.lt.projSpeed*(WD.proj||1); }
+function baseRate(){ return rate()/buffMult("prod"); }
+function projValue(t){ return Math.max(PT[t].m*60*PT[t].f*M.lt.projRew*baseRate(), PT[t].m*60); }
+function startProj(i){
+  if(S.lt.proj.length>=slots()) return; const o=S.lt.offers.splice(i,1)[0]; if(!o) return;
+  const now=Date.now(); S.lt.proj.push({n:o.n,t:o.t,start:now,end:now+projDurMs(o.t)}); fillOffers(); renderAll(true);
+}
+function collectProj(i){
+  const p=S.lt.proj[i]; if(!p||p.end>Date.now()) return null; S.lt.proj.splice(i,1);
+  const P=PT[p.t], v=projValue(p.t); gain(v);
+  let tk=Math.floor(P.tk); if(Math.random()<P.tk-tk) tk++; S.lt.tickets+=tk;
+  let item=null; if(Math.random()<Math.min(1,P.drop*M.lt.drop)) item=pullItem(1+p.t*0.08,0);
+  S.lt.projDone++; TD().proj++; return {v,tk,item,n:p.n};
+}
+function collectAll(){
+  let v=0,tk=0,items=[],n=0;
+  for(let i=S.lt.proj.length-1;i>=0;i--){ const r=collectProj(i); if(r){ n++; v+=r.v; tk+=r.tk; if(r.item) items.push(r.item.it.n+(r.item.refund?" (revendu)":"")); } }
+  if(n) toast(n+" projet(s) livré(s) : +"+fmt(v)+" tâches, +"+tk+" ticket(s)"+(items.length?", fournitures : "+items.join(", "):""));
+  renderAll(true);
+}
+
+/* R&D */
+function rState(r){ const L=S.lt; if(L.done[r.id]) return "done"; if(L.labs.some(l=>l.id===r.id)) return "run"; if(r.req&&!r.req.every(q=>L.done[q])) return "lock"; return "avail"; }
+function labCount(){ return 1+M.lt.labs; }
+function startResearch(id){
+  const r=RB_[id]; if(!r||rState(r)!=="avail"||S.lt.labs.length>=labCount()||S.lt.tickets<r.c) return;
+  S.lt.tickets-=r.c; const now=Date.now(); S.lt.labs.push({id,start:now,end:now+r.m*MIN}); renderAll(true);
+}
+function checkResearch(list){
+  const now=Date.now(); let ch=false;
+  S.lt.labs=S.lt.labs.filter(l=>{ if(l.end<=now){ S.lt.done[l.id]=1; ch=true; const n=RB_[l.id]?RB_[l.id].n:l.id; if(list) list.push(n); else toast("Recherche terminée : "+n); return false; } return true; });
+  if(ch){ M=mods(); rdKey=""; }
+}
+function rushCost(l){ const rem=Math.max(0,(l.end-Date.now())/1000); return Math.max(rem*baseRate()*2, rem*50); }
+function rush(i){ const l=S.lt.labs[i]; if(!l) return; const c=rushCost(l); if(S.tasks<c) return; S.tasks-=c; l.end=Date.now(); checkResearch(); renderAll(true); }
+
+/* Hors-ligne */
+function offEff(){ return Math.min(0.4,0.05+M.lt.offEff/100+(has("tele")?0.05:0))*(WD.off||1); }
+function offCapH(){ return Math.min(72,8+M.lt.offCap+(has("tele")?4:0)); }
+function offlineGain(secs){
+  const capS=offCapH()*3600, s=Math.min(secs,capS), eff=offEff(), v=baseRate()*s*eff;
+  if(v>0){ gain(v); S.lt.offTotal+=v; } return {v,s,eff,capped:secs>capS};
+}
+function applyOffline(){
+  const now=Date.now(), last=S.last||now, away=(now-last)/1000; S.last=now;
+  ensureToday(); fillOffers();
+  if(away<60) return;
+  const off=offlineGain(away), done=[]; checkResearch(done);
+  const ready=S.lt.proj.filter(p=>p.end<=now).length;
+  if(away<300){ if(off.v>0) toast("Pendant ta pause, l'équipe a bouclé "+fmt(off.v)+" tâches"); return; }
+  const lines=[];
+  lines.push("Ton équipe a bouclé <b>"+fmt(off.v)+"</b> tâches à "+Math.round(off.eff*100)+" % de son rythme"+(off.capped?" (plafond de "+offCapH()+" h atteint).":"."));
+  if(done.length) lines.push("Recherche terminée : <b>"+done.map(esc).join("</b>, <b>")+"</b>.");
+  if(ready) lines.push("<b>"+ready+"</b> projet(s) terminé(s), à récupérer dans l'onglet Projets.");
+  const free=slots()-S.lt.proj.length; if(free>0) lines.push(free+" emplacement(s) de projet libre(s).");
+  if(S.lt.labs.length<labCount()) lines.push("Un labo de R&D attend une nouvelle recherche.");
+  if(canBadge()) lines.push("Tu n'as pas encore badgé aujourd'hui.");
+  lines.push("Aujourd'hui : <b>"+esc(WD.n)+"</b>, "+esc(WD.d.charAt(0).toLowerCase()+WD.d.slice(1))+".");
+  showModal("Pendant ton absence ("+fmtDur(away*1000)+")",lines);
+}
+function showModal(title,lines){
+  $("modalTitle").textContent=title; const b=$("modalBody"); b.innerHTML="";
+  lines.forEach(l=>{ const p=document.createElement("p"); p.innerHTML=l; b.appendChild(p); });
+  $("modal").hidden=false; setTimeout(()=>$("modalOk").focus(),50);
+}
+$("modalOk").addEventListener("click",()=>{ $("modal").hidden=true; });
+
+/* Rendu */
+let projKey="", rdKey="", dailyKey="", itemsKey="";
+function bar(start,end){ return `<div class="pbar sunken" data-start="${start}" data-end="${end}"><i></i></div>`; }
+function renderProj(force){
+  const now=Date.now(), L=S.lt, full=L.proj.length>=slots();
+  const key=[slots(),L.proj.map(p=>p.n+p.t+(p.end<=now)).join(),L.offers.map(o=>o.n+o.t).join(),Math.floor(Math.log10(baseRate()+1)*4),M.lt.projSpeed,WD.idx].join("|");
+  if(!force&&key===projKey) return; projKey=key;
+  const ready=L.proj.filter(p=>p.end<=now).length;
+  $("projAll").hidden=!ready; $("projAll").textContent="Tout récupérer ("+ready+")";
+  $("projInfo").textContent=L.proj.length+" / "+slots()+" emplacement(s) utilisé(s) · "+L.projDone+" projet(s) livré(s) au total";
+  const el=$("projSlots"); el.innerHTML="";
+  L.proj.forEach((p,i)=>{
+    const d=document.createElement("div"); d.className="slot"+(p.end<=now?" ready":"");
+    d.innerHTML=`<div class="top"><b>${esc(p.n)}</b><span class="tag">${fmtDur(PT[p.t].m*MIN)}</span></div>`+
+      (p.end<=now?`<p>Livré ! Prime d'environ <b>${fmt(projValue(p.t))}</b> tâches.</p><div class="btns"><button class="btn">Récupérer</button></div>`
+                 :`${bar(p.start,p.end)}<p class="empty">Livraison dans <span data-start="${p.start}" data-end="${p.end}"></span></p>`);
+    const b=d.querySelector("button"); if(b) b.addEventListener("click",()=>{ const r=collectProj(i); if(r) toast("Projet livré : +"+fmt(r.v)+" tâches, +"+r.tk+" ticket(s)"+(r.item?", fourniture : "+r.item.it.n+(r.item.refund?" (déjà au max, revendue)":""):"")); renderAll(true); });
+    el.appendChild(d);
+  });
+  for(let i=L.proj.length;i<slots();i++){ const d=document.createElement("div"); d.className="slot free"; d.innerHTML="<p class=\"empty\">Emplacement libre. Choisis un appel d'offres ci-dessous.</p>"; el.appendChild(d); }
+  if(slots()<5){ const d=document.createElement("div"); d.className="slot locked"; d.innerHTML="<p class=\"empty\">Emplacement verrouillé. À débloquer dans la R&D, branche Projets.</p>"; el.appendChild(d); }
+  const of=$("projOffers"); of.innerHTML="";
+  L.offers.forEach((o,i)=>{
+    const P=PT[o.t], b=document.createElement("button"); b.className="perk"; b.disabled=full;
+    b.innerHTML=`<span class="name">${esc(o.n)}</span><span class="desc">Durée ${fmtDur(projDurMs(o.t))} · prime ≈ ${fmt(projValue(o.t))} · ${num(P.tk)} ticket(s) en moyenne · fourniture ${Math.round(Math.min(1,P.drop*M.lt.drop)*100)} %</span><span class="cost">${full?"Aucun emplacement libre":"Lancer le projet"}</span>`;
+    b.addEventListener("click",()=>startProj(i)); of.appendChild(b);
+  });
+}
+function renderRD(force){
+  const L=S.lt, key=[RESEARCH.map(rState).join(""),L.tickets,L.labs.length,labCount()].join("|");
+  if(!force&&key===rdKey) return; rdKey=key;
+  $("rdInfo").textContent=Object.keys(L.done).length+" / "+RESEARCH.length+" recherches terminées · "+L.labs.length+" / "+labCount()+" labo(s) occupé(s) · "+L.tickets+" ticket(s) resto";
+  const labs=$("labs"); labs.innerHTML="";
+  for(let i=0;i<labCount();i++){
+    const l=L.labs[i], d=document.createElement("div"); d.className="slot"+(l?"":" free");
+    if(l){ const r=RB_[l.id];
+      d.innerHTML=`<div class="top"><b>${esc(r.n)}</b><span class="tag">${esc(r.b)}</span></div>${bar(l.start,l.end)}<p class="empty">Résultat dans <span data-start="${l.start}" data-end="${l.end}"></span></p><div class="btns"><button class="btn" data-rush="${i}"></button></div>`;
+      d.querySelector("button").addEventListener("click",()=>rush(i));
+    } else d.innerHTML=`<p class="empty">Labo ${i+1} libre. Lance une recherche ci-dessous.</p>`;
+    labs.appendChild(d);
+  }
+  const tree=$("rdTree"); tree.innerHTML="";
+  [...new Set(RESEARCH.map(r=>r.b))].forEach(br=>{
+    const h=document.createElement("h3"); h.textContent=br; tree.appendChild(h);
+    const g=document.createElement("div"); g.className="perks";
+    RESEARCH.filter(r=>r.b===br).forEach(r=>{
+      const st=rState(r), b=document.createElement("button");
+      b.className="perk"+(st==="done"?" got":st==="run"?" run":"");
+      const canGo=st==="avail"&&L.labs.length<labCount()&&L.tickets>=r.c; b.disabled=!canGo;
+      const costTxt=st==="done"?"Terminée":st==="run"?"En cours":st==="lock"?"Nécessite : "+r.req.map(q=>RB_[q].n).join(", "):r.c+" ticket(s) · "+fmtDur(r.m*MIN);
+      b.innerHTML=`<span class="name">${esc(r.n)}</span><span class="desc">${esc(descE(r.e))}</span><span class="cost">${esc(costTxt)}</span>`;
+      b.addEventListener("click",()=>startResearch(r.id)); g.appendChild(b);
+    });
+    tree.appendChild(g);
+  });
+}
+function renderDaily(force){
+  const L=S.lt, t=TD();
+  const key=[canBadge(),L.streak,L.rtt,t.list.map(c=>c.claimed+":"+Math.min(c.target,t[c.t]||0)).join(),t.perfect,WD.idx,WD.pending].join("|");
+  if(!force&&key===dailyKey) return; dailyKey=key;
+  const cb=canBadge(); $("badgeBtn").disabled=!cb;
+  $("badgeBtn").innerHTML=cb?"Badger<span>une fois par jour</span>":"Badgé ✓<span>reviens demain</span>";
+  const tkNext=2+Math.floor(Math.min(L.streak+1,30)/5)+M.lt.tickets;
+  $("streakTxt").innerHTML=`Série : <b>${L.streak} jour(s)</b> · record ${L.best} · <b>${L.rtt}</b> jour(s) de RTT pour sauver une série`;
+  $("streakNext").textContent=cb?"Badger maintenant : +"+tkNext+" tickets resto, café du matin ×2 pendant 15 min"+((L.streak+1)%7===0?", et le colis de la semaine (fourniture rare ou mieux)":"")+".":"Prochain badge demain. Tous les 7 jours de série : un colis avec une fourniture rare ou mieux.";
+  const dots=$("streakDots"); dots.innerHTML=""; const filled=L.streak?((L.streak-1)%7)+1:0;
+  for(let i=1;i<=7;i++){ const s=document.createElement("span"); s.className=i<=filled?"on":""; s.textContent=i===7?"★":i; dots.appendChild(s); }
+  const el=$("dailyList"); el.innerHTML="";
+  t.list.forEach(c=>{
+    const v=Math.min(c.target,t[c.t]||0), done=v>=c.target, d=document.createElement("div"); d.className="quest";
+    d.innerHTML=`<div class="top"><b>${esc(chalLabel(c))}</b><span class="cost">${c.claimed?"Encaissé":"+"+chalReward()+" tickets"}</span></div><div class="qbar"><i style="width:${(v/c.target*100).toFixed(1)}%"></i></div><div class="btns"><span class="empty">${fmt(v)} / ${fmt(c.target)}</span><button class="btn">${c.claimed?"Encaissé":done?"Encaisser":"En cours"}</button></div>`;
+    const b=d.querySelector("button"); b.disabled=c.claimed||!done;
+    b.addEventListener("click",()=>{ if(c.claimed||(t[c.t]||0)<c.target) return; c.claimed=true; L.tickets+=chalReward();
+      if(!t.perfect&&t.list.every(x=>x.claimed)){ t.perfect=true; L.tickets+=3; toast("Journée parfaite : +3 tickets bonus"); } else toast("Défi réussi : +"+chalReward()+" tickets"); renderAll(true); });
+    el.appendChild(d);
+  });
+  $("dailyInfo").textContent=t.perfect?"Journée parfaite. Nouveaux défis demain.":"Les défis changent chaque nuit à minuit. Ce sont les mêmes pour tous les joueurs. Réussis les 3 pour +3 tickets bonus.";
+  const wk=$("weekList"); wk.innerHTML="";
+  [1,2,3,4,5,6,0].forEach(i=>{ const w=WEEK[i], r=document.createElement("div"); r.className="wk"+(i===WD.idx?" today":"");
+    r.innerHTML=`<b>${esc(w.n)}</b><span>${esc(w.d)}</span>`; wk.appendChild(r); });
+}
+function renderItems(force){
+  const L=S.lt, key=[L.tickets,JSON.stringify(L.items),lastPulls.length&&lastPulls[0].it.id,L.pity].join("|");
+  if(!force&&key===itemsKey) return; itemsKey=key;
+  $("pull1").disabled=L.tickets<3; $("pull10").disabled=L.tickets<27;
+  $("pullInfo").textContent="Tu as "+L.tickets+" ticket(s) resto. Légendaire garanti dans "+(60-L.pity)+" tirage(s) au plus.";
+  const pr=$("pullRes"); pr.innerHTML="";
+  lastPulls.forEach(p=>{ const s=document.createElement("span"); s.className="chip"; s.style.setProperty("--rc",RAR[p.it.r].c);
+    s.textContent=(p.isNew?"Nouveau ! ":"")+p.it.n+(p.refund?" (max, revendu +"+p.refund+" t.)":" · niv. "+p.lvl); pr.appendChild(s); });
+  const owned=Object.keys(L.items).length, tot=Object.values(L.items).reduce((a,b)=>a+b,0);
+  $("itemsSummary").textContent=owned+" / "+ITEMS.length+" fournitures trouvées · niveau total "+tot+" / "+(ITEMS.length*10)+". Chaque doublon fait monter l'objet d'un niveau, jusqu'à 10.";
+  const g=$("itemGrid"); g.innerHTML="";
+  ITEMS.forEach(it=>{ const lvl=L.items[it.id]||0, d=document.createElement("div"); d.className="item"+(lvl?"":" unk"); d.style.setProperty("--rc",RAR[it.r].c);
+    d.innerHTML=lvl?`<span class="ii">${esc(it.n.replace(/^(L'|Le |La )/,"").split(/[\s«»'’-]+/).filter(w=>w.length>2).slice(0,2).map(w=>w[0].toUpperCase()).join(""))}</span><span class="name">${esc(it.n)}</span><span class="desc">${RAR[it.r].n} · niv. ${lvl}/10</span><span class="desc">${esc(itemDesc(it.e,lvl))}</span>`
+                   :`<span class="ii">?</span><span class="name">???</span><span class="desc">${RAR[it.r].n} · pas encore trouvé</span>`;
+    g.appendChild(d); });
+}
+function updTimers(){
+  const now=Date.now();
+  document.querySelectorAll("[data-end]").forEach(el=>{ const e=+el.dataset.end, s=+el.dataset.start;
+    if(el.classList.contains("pbar")) el.firstElementChild.style.width=Math.min(100,Math.max(0,(now-s)/(e-s)*100))+"%";
+    else el.textContent=e<=now?"quelques secondes":fmtDur(e-now); });
+  document.querySelectorAll("[data-rush]").forEach(b=>{ const l=S.lt.labs[+b.dataset.rush]; if(!l) return; const c=rushCost(l);
+    b.textContent="Terminer maintenant ("+fmt(c)+" tâches)"; b.disabled=S.tasks<c; });
+}
+function renderAgenda(){
+  const L=S.lt, now=Date.now();
+  $("agTickets").textContent=L.tickets+" ticket"+(L.tickets>1?"s":"")+" resto";
+  const t=L.today, claim=t?t.list.filter(c=>!c.claimed&&(t[c.t]||0)>=c.target).length:0, cdone=t?t.list.filter(c=>c.claimed).length:0;
+  $("agDaily").innerHTML=canBadge()?"<b>Pointeuse :</b> pas encore badgé aujourd'hui":"<b>Pointeuse :</b> série de "+L.streak+" j · défis "+cdone+"/3"+(claim?" · "+claim+" à encaisser":"");
+  $("agDaily").classList.toggle("hot",canBadge()||claim>0);
+  const ready=L.proj.filter(p=>p.end<=now).length, run=L.proj.length-ready, next=L.proj.filter(p=>p.end>now).sort((a,b)=>a.end-b.end)[0];
+  $("agProj").innerHTML="<b>Projets :</b> "+(ready?ready+" livré(s) à récupérer":run?run+" en cours, prochain dans "+fmtDur(next.end-now):"aucun projet lancé")+" · "+L.proj.length+"/"+slots();
+  $("agProj").classList.toggle("hot",ready>0||L.proj.length<slots());
+  const lab=L.labs.slice().sort((a,b)=>a.end-b.end)[0];
+  $("agRd").innerHTML="<b>R&D :</b> "+(lab?esc(RB_[lab.id].n)+", "+fmtDur(lab.end-now):"labo libre")+(L.labs.length<labCount()&&lab?" · labo libre":"");
+  $("agRd").classList.toggle("hot",L.labs.length<labCount());
+  $("agDay").innerHTML="<b>"+esc(WD.n)+" :</b> "+esc(WD.d)+(WD.pending?" (pas encore)":"");
+  $("agOff").textContent="Hors-ligne : "+Math.round(offEff()*100)+" % du rythme, jusqu'à "+offCapH()+" h · ancienneté "+L.daysPlayed+" j (+"+Math.min(L.daysPlayed,365)+" %)";
+}
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>{ const t=document.querySelector('.tab[data-tab="'+b.dataset.go+'"]'); if(t) t.click(); }));
+$("badgeBtn").addEventListener("click",badge);
+$("pull1").addEventListener("click",()=>doPull(1));
+$("pull10").addEventListener("click",()=>doPull(10));
+$("projAll").addEventListener("click",collectAll);
+
 /* ---------- Tabs & render ---------- */
-let tab="hire";
+let tab="hire", cvKey="";
 $("tabs").addEventListener("click",e=>{ const t=e.target.closest(".tab"); if(!t) return; tab=t.dataset.tab;
   $("tabs").querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===t));
-  ["hire","upg","quest","cv","board","stats"].forEach(k=>$("v-"+k).hidden=k!==tab);
+  ["hire","upg","quest","proj","rd","daily","items","cv","board","stats"].forEach(k=>$("v-"+k).hidden=k!==tab);
   renderAll(true); });
 function renderTop(){
   const r=rate();
@@ -596,20 +1320,33 @@ function renderTop(){
   const now=Date.now(); buffs=buffs.filter(b=>b.until>now);
   $("buffs").innerHTML=buffs.map(b=>`<span>${esc(b.name)} · ${Math.ceil((b.until-now)/1000)} s</span>`).join("");
   document.title=fmt(S.tasks)+" tâches · Open Space Tycoon";
+  const emp=H.reduce((a,h)=>a+S.owned[h.id],0);
+  $("statusOwned").textContent=emp.toLocaleString("fr-FR")+" employé"+(emp>1?"s":"");
+  $("statusLeft").textContent=buffs.length?"Bonus actif : "+buffs.map(b=>b.name).join(", "):(S.xp?"XP : "+S.xp+" · Démissions : "+S.resets:"Prêt");
 }
+const TABN={hire:"Recrutements",upg:"Améliorations",quest:"Objectifs",proj:"Projets",rd:"R&D",daily:"Pointeuse",items:"Tiroir",cv:"CV",board:"Classement",stats:"Carrière"};
 function renderTabsBadges(){
-  const nu=availUpg().filter(u=>S.tasks>=u.cost).length, nq=readyQuests();
-  const T=$("tabs").children;
-  T[1].textContent="Améliorations"+(nu?" ("+nu+")":""); T[2].textContent="Objectifs"+(nq?" ("+nq+")":"");
+  const now=Date.now(), L=S.lt, t=L.today;
+  const n={upg:availUpg().filter(u=>S.tasks>=u.cost).length, quest:readyQuests(), proj:L.proj.filter(p=>p.end<=now).length,
+    rd:(L.labs.length<labCount()&&RESEARCH.some(r=>rState(r)==="avail"&&L.tickets>=r.c))?"!":0,
+    daily:(canBadge()?1:0)+(t?t.list.filter(c=>!c.claimed&&(t[c.t]||0)>=c.target).length:0),
+    items:L.tickets>=3?"!":0};
+  $("tabs").querySelectorAll(".tab").forEach(b=>{ const k=b.dataset.tab, v=n[k]; const txt=TABN[k]+(v?" ("+v+")":""); if(b.textContent!==txt) b.textContent=txt; });
 }
 function renderAll(force){
   renderTop(); renderTabsBadges();
   if(tab==="hire") renderHires();
   if(tab==="upg") renderUpg(force);
   if(tab==="quest") renderQuests(force);
-  if(tab==="cv" && force) renderCV();
+  if(tab==="cv"){ const k=[xpGain(),S.tokens,S.shares,sharesGain(),S.perks.length,S.founder.length,JSON.stringify(S.perkLv)].join("|");
+    if(force||k!==cvKey){ cvKey=k; renderCV(); } }
   if(tab==="stats") renderStats();
   if(tab==="board" && force) renderBoard();
+  if(tab==="proj") renderProj(force);
+  if(tab==="rd") renderRD(force);
+  if(tab==="daily") renderDaily(force);
+  if(tab==="items") renderItems(force);
+  updTimers(); renderAgenda();
 }
 
 /* ---------- Boss key ---------- */
@@ -627,6 +1364,9 @@ function buildBoss(){
 function toggleBoss(){ const b=$("boss"); b.hidden=!b.hidden; if(!b.hidden){ buildBoss(); S.bossOpens++; document.title="Budget_Previsionnel_T4.xlsx"; } else renderAll(true); }
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") toggleBoss(); });
 $("boss").addEventListener("dblclick",toggleBoss);
+$("startBtn").addEventListener("click",toggleBoss);
+function tickClock(){ const d=new Date(); $("clock").textContent=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+tickClock(); setInterval(tickClock,10000);
 
 /* ---------- Save: local + Supabase + leaderboard ---------- */
 const CFG = window.OST_CONFIG || {};
@@ -741,19 +1481,19 @@ $("reset").addEventListener("click",()=>{ $("resetYes").hidden=false; });
 $("resetYes").addEventListener("click",()=>{ S=fresh(); M=mods(); fillQuests(); $("resetYes").hidden=true; saveAll(true); renderAll(true); });
 
 /* ---------- Loop ---------- */
-function applyOffline(){
-  const cap=has("tele")?12*3600:8*3600, away=Math.min((Date.now()-(S.last||Date.now()))/1000,cap);
-  if(away>60){ const v=rate()*away*(has("tele")?1:0.5); if(v>0){ gain(v); setTimeout(()=>toast("Pendant ton absence, l'équipe a bouclé "+fmt(v)+" tâches"),600); } }
-  S.last=Date.now();
-}
-applyOffline(); fillQuests();
-let prev=performance.now(), acc=0, autoAcc=0;
+ensureToday(); fillOffers(); applyOffline(); fillQuests();
+if(migrated) setTimeout(()=>toast("Rééquilibrage : ton XP a été recalculée et tes lignes de CV remboursées. Nouveau poste, bonne chance !"),900);
+let prev=performance.now(), acc=0, autoAcc=0, wdAcc=0;
 setInterval(()=>{
-  const now=performance.now(), dt=Math.min((now-prev)/1000,5); prev=now;
-  const r=rate(); gain(r*dt); S.played+=dt; S.bestRate=Math.max(S.bestRate,r);
-  if(has("auto")){ autoAcc+=dt*5; while(autoAcc>=1){ autoAcc--; doClick(null,null,true); } }
+  const now=performance.now(); let dt=(now-prev)/1000; prev=now;
+  if(dt>120){ const o=offlineGain(dt); S.last=Date.now(); if(o.v>0) toast("Retour de veille : +"+fmt(o.v)+" tâches à "+Math.round(o.eff*100)+" %"); dt=0.1; }
+  const r=rate(); gain(r*dt); S.played+=dt; S.bestRate=Math.max(S.bestRate,r); S.last=Date.now();
+  const aps=(has("auto")?5:0)+3*lv("stagc")+M.lt.auto;
+  if(aps){ autoAcc+=dt*aps; const k=Math.floor(autoAcc); if(k>0){ autoAcc-=k; gain(clickVal()*k*(has("crit")?1.45:1)); S.clicks+=k; } }
   if(Date.now()-lastClick>1200 && combo>0) combo=Math.max(0,combo-1);
-  acc+=dt; if(acc>=1){ acc=0; checkAch(); }
+  acc+=dt; if(acc>=1){ acc=0; checkAch(); ensureToday(); checkResearch(); fillOffers();
+    if(has("f_auto")){ let k=0; availUpg().forEach(u=>{ if(buyUpg(u)) k++; }); if(k) upgKey=""; } }
+  wdAcc+=dt; if(wdAcc>=30){ wdAcc=0; const w=weekday(); if(w.idx!==WD.idx||w.prod!==WD.prod){ WD=w; M=mods(); dailyKey=projKey=""; } }
   if(!$("boss").hidden) return;
   renderAll(false);
 },100);
